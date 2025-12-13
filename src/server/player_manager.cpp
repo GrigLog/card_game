@@ -1,7 +1,11 @@
 #include "player_manager.h"
 #include <sys/poll.h>
 #include "message.h"
+#include "../common/command.h"
 #include <memory>
+#include <sstream>
+#include <type_traits>
+#include <common.h>
 
  PlayerManager::PlayerManager(int newPlayerPipeFd) 
     : newPlayerPipeFd(newPlayerPipeFd) {
@@ -71,43 +75,41 @@ void PlayerManager::run() {
 
 
 void PlayerManager::handleCommand(uint32_t playerId, const std::string& command) {
-    std::istringstream iss(command);
-    std::string cmd;
-    iss >> cmd;
+    auto cmd = parseCommand(command);
     
-    // Поддержка сокращений
-    if (cmd == "c") cmd = "create";
-    else if (cmd == "j") cmd = "join";
-    else if (cmd == "l") cmd = "list";
+    if (!cmd.has_value()) {
+        sendToPlayer(playerId, "error: Unknown command. Use: create, join, list");
+        return;
+    }
     
-    if (cmd == "create") {
-        std::string name;
-        size_t maxPlayers;
-        if (iss >> name >> maxPlayers) {
-            if (maxPlayers < 2 || maxPlayers > 6) {
+    std::visit([this, playerId](auto&& arg) {
+        auto visitor = overload{
+            [](const CreateRoomCommand& q)        { std::cout << "Quit\n"; },
+            [](const JoinRoomCommand& m)        { std::cout << "Move " << m.x << " " << m.y << "\n"; },
+            [](const ListRoomsCommand& w)       { std::cout << "Write " << w.s << "\n"; },
+            [](const ChangeColor& c) { std::cout << "ChangeColor " << c.r << " " << c.g << " " << c.b << "\n"; }
+        };
+        
+        if constexpr (std::is_same_v<T, CreateRoomCommand>) {
+            if (arg.maxPlayers < 2 || arg.maxPlayers > 6) {
                 sendToPlayer(playerId, "error: Invalid number of players (2-6)");
                 return;
             }
             
-            if (rooms.find(name) != rooms.end()) {
+            if (rooms.find(arg.name) != rooms.end()) {
                 sendToPlayer(playerId, "error: Room already exists");
                 return;
             }
             
-            std::unique_ptr<GameRoom> room = std::make_unique<GameRoom>(name, playerId, maxPlayers);
+            std::unique_ptr<GameRoom> room = std::make_unique<GameRoom>(arg.name, playerId, arg.maxPlayers);
             if (room.get()) {
-                sendToPlayer(playerId, "ok: Room created: " + name);
-                rooms[name] = std::move(room);
+                sendToPlayer(playerId, "ok: Room created: " + arg.name);
+                rooms[arg.name] = std::move(room);
             } else {
                 sendToPlayer(playerId, "error: Failed to create room");
             }
-        } else {
-            sendToPlayer(playerId, "error: Usage: create <name> <max_players>");
-        }
-    } else if (cmd == "join") {
-        std::string name;
-        if (iss >> name) {
-            auto it = rooms.find(name);
+        } else if constexpr (std::is_same_v<T, JoinRoomCommand>) {
+            auto it = rooms.find(arg.name);
             if (it == rooms.end()) {
                 sendToPlayer(playerId, "error: Room not found");
                 return;
@@ -120,25 +122,21 @@ void PlayerManager::handleCommand(uint32_t playerId, const std::string& command)
             
             // Добавляем игрока в комнату
             if (it->second->addPlayer(playerId)) {
-                sendToPlayer(playerId, "ok: Joined room: " + name);
+                sendToPlayer(playerId, "ok: Joined room: " + arg.name);
             } else {
                 sendToPlayer(playerId, "error: Failed to join room");
             }
-        } else {
-            sendToPlayer(playerId, "error: Usage: join <name>");
+        } else if constexpr (std::is_same_v<T, ListRoomsCommand>) {
+            int i = 0;
+            std::ostringstream oss;
+            for (const auto& [name, room] : rooms) {
+                if (i++ > 0)
+                    oss << ",";
+                oss << name;
+            }
+            sendToPlayer(playerId, "Rooms: " + oss.str());
         }
-    } else if (cmd == "list") {
-        int i = 0;
-        std::ostringstream oss;
-        for (const auto& [name, room] : rooms) {
-            if (i++ > 0)
-                oss << ",";
-            oss << name;
-        }
-        sendToPlayer(playerId, "Rooms: " + oss.str());
-    } else {
-        sendToPlayer(playerId, "error: Unknown command. Use: create, join, list");
-    } //TODO: game-specific commands are also parsed here and redirected to their respective rooms
+    }, *cmd);
 }
 
 void PlayerManager::sendToPlayer(uint32_t playerId, const std::string& response) {

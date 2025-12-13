@@ -15,6 +15,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/common)
 set (COMMON_SOURCES 
     src/common/common.cpp
     src/common/message.cpp
+    src/common/command.cpp
 )
 
 set (SERVER_SOURCES 
