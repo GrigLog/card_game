@@ -31,8 +31,20 @@ include_directories(${CMAKE_SOURCE_DIR}/src/common)
 #     src/main.cpp
 # )
 
-set (COMMON_SOURCES src/common/common.cpp)
-set (SERVER_SOURCES src/server/server.cpp)
+set (COMMON_SOURCES 
+    src/common/common.cpp
+    src/common/message.cpp
+)
+
+set (SERVER_SOURCES 
+    src/server/server.cpp
+    src/server/game_server.cpp
+    src/server/accept_handler.cpp
+    src/server/lobby_handler.cpp
+    src/server/room_manager.cpp
+    src/server/game_room.cpp
+)
+
 set (CLIENT_SOURCES src/client/client.cpp)
 
 add_executable(${PROJECT_NAME}_client ${CLIENT_SOURCES} ${COMMON_SOURCES})

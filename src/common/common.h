@@ -1,3 +1,6 @@
 #pragma once
 
-unsigned short PORT = 6969;
+#include <string>
+#include <format>
+
+constexpr unsigned short PORT = 6969;
