@@ -10,7 +10,7 @@ option(BUILD_TESTS "Build tests" OFF)
 
 # Включаем директории
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src2/common)
+include_directories(${CMAKE_SOURCE_DIR}/src/common)
 
 # Исходные файлы
 # set(SOURCES
@@ -31,9 +31,9 @@ include_directories(${CMAKE_SOURCE_DIR}/src2/common)
 #     src/main.cpp
 # )
 
-set (COMMON_SOURCES src2/common/common.cpp)
-set (SERVER_SOURCES src2/server/server.cpp)
-set (CLIENT_SOURCES src2/client/client.cpp)
+set (COMMON_SOURCES src/common/common.cpp)
+set (SERVER_SOURCES src/server/server.cpp)
+set (CLIENT_SOURCES src/client/client.cpp)
 
 add_executable(${PROJECT_NAME}_client ${CLIENT_SOURCES} ${COMMON_SOURCES})
 add_executable(${PROJECT_NAME}_server ${SERVER_SOURCES} ${COMMON_SOURCES})
