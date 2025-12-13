@@ -5,71 +5,74 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Кросс-платформенные настройки
-if(WIN32)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
 # Опции сборки
-option(BUILD_TESTS "Build tests" ON)
-option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_TESTS "Build tests" OFF)
 
 # Включаем директории
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/src2/common)
 
 # Исходные файлы
-set(SOURCES
-    src/Card.cpp
-    src/Deck.cpp
-    src/GameEvent.cpp
-    src/Action.cpp
-    src/BotStrategy.cpp
-    src/BotPlayer.cpp
-    src/HumanPlayer.cpp
-    src/GameSession.cpp
-    src/GameServer.cpp
-)
+# set(SOURCES
+#     src/Card.cpp
+#     src/Deck.cpp
+#     src/GameEvent.cpp
+#     src/Action.cpp
+#     src/BotStrategy.cpp
+#     src/BotPlayer.cpp
+#     src/HumanPlayer.cpp
+#     src/GameSession.cpp
+#     src/GameServer.cpp
+# )
 
-# Основной исполняемый файл
-add_executable(${PROJECT_NAME} 
-    ${SOURCES}
-    src/main.cpp
-)
+# # Основной исполняемый файл
+# add_executable(${PROJECT_NAME} 
+#     ${SOURCES}
+#     src/main.cpp
+# )
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+set (COMMON_SOURCES src2/common/common.cpp)
+set (SERVER_SOURCES src2/server/server.cpp)
+set (CLIENT_SOURCES src2/client/client.cpp)
+
+add_executable(${PROJECT_NAME}_client ${CLIENT_SOURCES} ${COMMON_SOURCES})
+add_executable(${PROJECT_NAME}_server ${SERVER_SOURCES} ${COMMON_SOURCES})
+
+target_compile_features(${PROJECT_NAME}_client PUBLIC cxx_std_23)
+target_compile_features(${PROJECT_NAME}_server PUBLIC cxx_std_23)
 
 # Тесты
-if(BUILD_TESTS)
-    enable_testing()
+# if(BUILD_TESTS)
+#     enable_testing()
     
-    # Поиск Google Test
-    include(FetchContent)
-    FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.14.0
-    )
+#     # Поиск Google Test
+#     include(FetchContent)
+#     FetchContent_Declare(
+#         googletest
+#         GIT_REPOSITORY https://github.com/google/googletest.git
+#         GIT_TAG v1.14.0
+#     )
     
-    # Для Windows: отключаем установку googletest
-    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+#     # Для Windows: отключаем установку googletest
+#     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+#     FetchContent_MakeAvailable(googletest)
     
-    # Файлы тестов
-    file(GLOB TEST_SOURCES "test/*.cpp")
+#     # Файлы тестов
+#     file(GLOB TEST_SOURCES "test/*.cpp")
     
-    foreach(TEST_SOURCE ${TEST_SOURCES})
-        get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
-        add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
-        target_link_libraries(${TEST_NAME} 
-            PRIVATE 
-            GTest::gtest 
-            GTest::gtest_main
-            GTest::gmock
-        )
-        target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-        add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-    endforeach()
-endif()
+#     foreach(TEST_SOURCE ${TEST_SOURCES})
+#         get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+#         add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
+#         target_link_libraries(${TEST_NAME} 
+#             PRIVATE 
+#             GTest::gtest 
+#             GTest::gtest_main
+#             GTest::gmock
+#         )
+#         target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+#         add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+#     endforeach()
+# endif()
 
 # Проверка стиля кодирования с помощью clang-format
 find_program(CLANG_FORMAT clang-format)
@@ -95,5 +98,5 @@ else()
 endif()
 
 # Установка (опционально)
-install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-install(DIRECTORY include/ DESTINATION include)
+# install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+# install(DIRECTORY include/ DESTINATION include)
