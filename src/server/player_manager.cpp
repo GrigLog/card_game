@@ -1,46 +1,23 @@
-#include "lobby_handler.h"
-#include <sstream>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <algorithm>
-#include <thread>
-#include <chrono>
-#include <iostream>
+#include "player_manager.h"
+#include <sys/poll.h>
+#include "message.h"
+#include <memory>
 
-LobbyHandler::LobbyHandler(RoomManager& roomManager)
-    : roomManager(roomManager), nextPlayerId(1), running(false) {
+ PlayerManager::PlayerManager(int newPlayerPipeFd) 
+    : newPlayerPipeFd(newPlayerPipeFd) {
+    runThread = std::thread(&PlayerManager::run, this);
 }
 
-LobbyHandler::~LobbyHandler() {
-    stop();
-}
-
-void LobbyHandler::start(int wakeupReadFd) {
-    if (running) {
-        return;
-    }
-    running = true;
-    wakeupReadFd = wakeupReadFd;
-    lobbyThread = std::thread(&LobbyHandler::run, this);
-}
-
-void LobbyHandler::stop() {
-    if (!running) {
-        return;
-    }
+PlayerManager::~PlayerManager() {
     running = false;
-    std::cout << "Stopping LobbyHandler..." << std::endl;
-    if (lobbyThread.joinable()) {
-        lobbyThread.join();
+    std::cout << "PlayerManager is stopping..." << std::endl;
+    if (runThread.joinable()) {
+        runThread.join();
     }
-    if (wakeupReadFd >= 0)
-        close(wakeupReadFd);
-    std::cout << "LobbyHandler stopped." << std::endl;
+    std::cout << "PlayerManager stopped." << std::endl;
 }
 
-void LobbyHandler::run() {
+void PlayerManager::run() {
     while (running) {
         // Собираем сокеты для poll()
         std::vector<pollfd> pollfds;
@@ -53,7 +30,7 @@ void LobbyHandler::run() {
             pollfds.push_back(pollfd{socketFd, POLLIN, 0});
             playerIds.push_back(id);
         }
-        pollfds.push_back(pollfd{wakeupReadFd, POLLIN, 0});
+        pollfds.push_back(pollfd{newPlayerPipeFd, POLLIN, 0});
         
         // Вызываем poll() с таймаутом 1 секунда (на всякий случай)
         int result = poll(pollfds.data(), pollfds.size(), 1000);
@@ -65,7 +42,7 @@ void LobbyHandler::run() {
         for (size_t i = 0; i < pollfds.size(); ++i) {
             auto& [fd, _, revents] = pollfds[i];
             if (revents & POLLIN) {
-                if (fd == wakeupReadFd) { // Присоединился новый игрок
+                if (fd == newPlayerPipeFd) { // Присоединился новый игрок
                     int newSocketFd;
                     read(fd, &newSocketFd, sizeof(newSocketFd));
                     players[nextPlayerId++] = newSocketFd;
@@ -92,7 +69,8 @@ void LobbyHandler::run() {
     }
 }
 
-void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) {
+
+void PlayerManager::handleCommand(uint32_t playerId, const std::string& command) {
     std::istringstream iss(command);
     std::string cmd;
     iss >> cmd;
@@ -100,6 +78,7 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
     // Поддержка сокращений
     if (cmd == "c") cmd = "create";
     else if (cmd == "j") cmd = "join";
+    else if (cmd == "l") cmd = "list";
     
     if (cmd == "create") {
         std::string name;
@@ -110,13 +89,15 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
                 return;
             }
             
-            if (roomManager.roomExists(name)) {
+            if (rooms.find(name) != rooms.end()) {
                 sendToPlayer(playerId, "error: Room already exists");
                 return;
             }
             
-            if (roomManager.createRoom(name, playerId, maxPlayers)) {
+            std::unique_ptr<GameRoom> room = std::make_unique<GameRoom>(name, playerId, maxPlayers);
+            if (room.get()) {
                 sendToPlayer(playerId, "ok: Room created: " + name);
+                rooms[name] = std::move(room);
             } else {
                 sendToPlayer(playerId, "error: Failed to create room");
             }
@@ -126,56 +107,41 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
     } else if (cmd == "join") {
         std::string name;
         if (iss >> name) {
-            GameRoom* room = roomManager.findRoom(name);
-            if (!room) {
+            auto it = rooms.find(name);
+            if (it == rooms.end()) {
                 sendToPlayer(playerId, "error: Room not found");
                 return;
             }
             
-            if (room->isFull()) {
+            if (it->second->isFull()) {
                 sendToPlayer(playerId, "error: Room is full");
                 return;
             }
             
-            // Получаем сокет игрока
-            int socketFd = -1;
-            auto it = players.find(playerId);
-            if (it != players.end()) {
-                socketFd = it->second;
-                players.erase(it);
-            }
-            
-            if (socketFd < 0) {
-                sendToPlayer(playerId, "error: Player not found");
-                return;
-            }
-            
             // Добавляем игрока в комнату
-            if (room->addPlayer(playerId, socketFd)) {
+            if (it->second->addPlayer(playerId)) {
                 sendToPlayer(playerId, "ok: Joined room: " + name);
             } else {
                 sendToPlayer(playerId, "error: Failed to join room");
-                // Возвращаем сокет обратно в лобби
-                players[playerId] = socketFd;
             }
         } else {
             sendToPlayer(playerId, "error: Usage: join <name>");
         }
     } else if (cmd == "list") {
-        auto rooms = roomManager.listRooms();
+        int i = 0;
         std::ostringstream oss;
-        oss << "ok: Rooms: ";
-        for (size_t i = 0; i < rooms.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << rooms[i];
+        for (const auto& [name, room] : rooms) {
+            if (i++ > 0)
+                oss << ",";
+            oss << name;
         }
         sendToPlayer(playerId, oss.str());
     } else {
         sendToPlayer(playerId, "error: Unknown command. Use: create, join, list");
-    }
+    } //TODO: game-specific commands are also parsed here and redirected to their respective rooms
 }
 
-void LobbyHandler::sendToPlayer(uint32_t playerId, const std::string& response) {
+void PlayerManager::sendToPlayer(uint32_t playerId, const std::string& response) {
     auto it = players.find(playerId);
     if (it != players.end()) {
         Message::writeToSocket(it->second, response);

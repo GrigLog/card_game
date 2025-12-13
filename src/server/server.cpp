@@ -21,16 +21,12 @@ int main(int argc, char** argv) {
     signal(SIGTERM, signalHandler);
     
     try {
-        GameServer server; 
-        server.start();
-        // Все, что делает этот поток - ждет сигнала остановки
-        //while (g_running && server.isRunning()) {
-        //    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        //}
+        GameServer server;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
+    std::cout << "Game server stopped." << std::endl;
     
     return 0;
 }

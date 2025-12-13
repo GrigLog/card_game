@@ -5,46 +5,6 @@
 #include <iostream>
 #include <errno.h>
 
-AcceptHandler::AcceptHandler() : running(false) {
-}
-
-AcceptHandler::~AcceptHandler() {
-    stop();
-}
-
-void AcceptHandler::start(int wakeupWriteFd) {
-    if (running) 
-        return;
-    running = true;
-    listenSocketFd = createListenSocket();
-    //std::cout << "listening socket = " << listenSocketFd << std::endl;
-    wakeupWriteFd = wakeupWriteFd;
-    runThread = std::thread(&AcceptHandler::run, this);
-}
-
-void AcceptHandler::stop() {
-    if (!running) {
-        return;
-    }
-    running = false;
-    std::cout << "Stopping AcceptHandler..." << std::endl;
-    if (wakeupWriteFd >= 0) {
-        close(wakeupWriteFd);
-    }
-    if (listenSocketFd >= 0) {
-        //std::cout << "closed listening socket " << listenSocketFd << std::endl;
-        shutdown(listenSocketFd, SHUT_RDWR);  //NOTE: only shutdown() guarantees escaping blocking functions such as accept()
-        close(listenSocketFd);
-    }
-    if (runThread.joinable()) {
-        runThread.join();
-    }
-    std::cout << "AcceptHandler stopped." << std::endl;
-}
-
-// int AcceptHandler::getNewSocket() {
-//     return newSockets.pop();
-// }
 
 void AcceptHandler::run() {
     while (running) {
@@ -65,7 +25,7 @@ void AcceptHandler::run() {
                   << ":" << ntohs(peer_address.sin_port) << std::endl;
         
         // Добавляем сокет в очередь
-        write(wakeupWriteFd, &active_sockfd, sizeof(active_sockfd));
+        write(newPlayerPipeFd, &active_sockfd, sizeof(active_sockfd));
         //newSockets.push(active_sockfd);
     }
 }
