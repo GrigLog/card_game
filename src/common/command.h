@@ -4,20 +4,20 @@
 #include <variant>
 #include <optional>
 
-struct CreateRoomCommand {
+struct CreateCommand {
     std::string name;
     size_t maxPlayers;
 };
 
-struct JoinRoomCommand {
+struct JoinCommand {
     std::string name;
 };
 
-struct ListRoomsCommand {
+struct ListCommand {
 };
 
 // Тип команды - variant всех возможных команд
-using Command = std::variant<CreateRoomCommand, JoinRoomCommand, ListRoomsCommand>;
+using Command = std::variant<CreateCommand, JoinCommand, ListCommand>;
 
 // Парсинг команды из строки
 // Возвращает optional с Command, или nullopt если команда не распознана

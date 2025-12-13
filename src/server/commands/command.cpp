@@ -1,7 +1,10 @@
 #include "command.h"
+#include "create.h"
+#include "join.h"
+#include "list.h"
 #include <sstream>
 
-std::optional<Command> parseCommand(const std::string& commandStr) {
+std::unique_ptr<Command> parseCommand(const std::string& commandStr) {
     std::istringstream iss(commandStr);
     std::string cmd;
     iss >> cmd;
@@ -15,19 +18,19 @@ std::optional<Command> parseCommand(const std::string& commandStr) {
         std::string name;
         size_t maxPlayers;
         if (iss >> name >> maxPlayers) {
-            return CreateCommand{name, maxPlayers};
+            return std::make_unique<CreateCommand>(name, maxPlayers);
         }
-        return std::nullopt;
+        return nullptr;
     } else if (cmd == "join") {
         std::string name;
         if (iss >> name) {
-            return JoinCommand{name};
+            return std::make_unique<JoinCommand>(name);
         }
-        return std::nullopt;
+        return nullptr;
     } else if (cmd == "list") {
-        return ListCommand{};
+        return std::make_unique<ListCommand>();
     }
     
-    return std::nullopt;
+    return nullptr;
 }
 
