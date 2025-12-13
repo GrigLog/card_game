@@ -135,7 +135,7 @@ void PlayerManager::handleCommand(uint32_t playerId, const std::string& command)
                 oss << ",";
             oss << name;
         }
-        sendToPlayer(playerId, oss.str());
+        sendToPlayer(playerId, "Rooms: " + oss.str());
     } else {
         sendToPlayer(playerId, "error: Unknown command. Use: create, join, list");
     } //TODO: game-specific commands are also parsed here and redirected to their respective rooms
