@@ -7,7 +7,18 @@
 
 // Минимальная игровая комната - только хранит игроков
 class GameRoom {
-public:
+    std::string name;
+    uint32_t ownerId;
+    size_t maxPlayers;
+    
+    struct PlayerInfo {
+        uint32_t id;
+        int socketFd;
+    };
+    std::vector<PlayerInfo> players;
+    mutable std::mutex playersMutex;
+
+    public:
     GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers);
     
     std::string getName() const { return name; }
@@ -24,16 +35,4 @@ public:
     
     // Получить список ID игроков
     std::vector<uint32_t> getPlayerIds() const;
-
-private:
-    std::string name;
-    uint32_t ownerId;
-    size_t maxPlayers;
-    
-    struct PlayerInfo {
-        uint32_t id;
-        int socketFd;
-    };
-    std::vector<PlayerInfo> players;
-    mutable std::mutex playersMutex;
 };

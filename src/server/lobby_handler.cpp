@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 LobbyHandler::LobbyHandler(RoomManager& roomManager)
     : roomManager(roomManager), nextPlayerId(1), running(false) {
@@ -16,11 +17,12 @@ LobbyHandler::~LobbyHandler() {
     stop();
 }
 
-void LobbyHandler::start() {
+void LobbyHandler::start(int wakeupReadFd) {
     if (running) {
         return;
     }
     running = true;
+    wakeupReadFd = wakeupReadFd;
     lobbyThread = std::thread(&LobbyHandler::run, this);
 }
 
@@ -29,92 +31,63 @@ void LobbyHandler::stop() {
         return;
     }
     running = false;
+    std::cout << "Stopping LobbyHandler..." << std::endl;
     if (lobbyThread.joinable()) {
         lobbyThread.join();
     }
-}
-
-void LobbyHandler::addPlayer(int socketFd) {
-    std::lock_guard<std::mutex> lock(newSocketsMutex);
-    newSockets.push(socketFd);
+    if (wakeupReadFd >= 0)
+        close(wakeupReadFd);
+    std::cout << "LobbyHandler stopped." << std::endl;
 }
 
 void LobbyHandler::run() {
     while (running) {
-        // Обрабатываем новые сокеты
-        {
-            std::lock_guard<std::mutex> lock(newSocketsMutex);
-            while (!newSockets.empty()) {
-                int socketFd = newSockets.front();
-                newSockets.pop();
-                
-                // Устанавливаем non-blocking режим
-                int flags = fcntl(socketFd, F_GETFL, 0);
-                if (flags >= 0) {
-                    fcntl(socketFd, F_SETFL, flags | O_NONBLOCK);
-                }
-                
-                uint32_t playerId = nextPlayerId++;
-                
-                std::lock_guard<std::mutex> playersLock(playersMutex);
-                players[playerId] = socketFd;
-            }
-        }
-        
         // Собираем сокеты для poll()
-        std::vector<struct pollfd> pollfds;
+        std::vector<pollfd> pollfds;
         std::vector<uint32_t> playerIds;
         
-        {
-            std::lock_guard<std::mutex> lock(playersMutex);
-            pollfds.reserve(players.size());
-            playerIds.reserve(players.size());
-            
-            for (auto& [id, socketFd] : players) {
-                struct pollfd pfd;
-                pfd.fd = socketFd;
-                pfd.events = POLLIN;
-                pfd.revents = 0;
-                pollfds.push_back(pfd);
-                playerIds.push_back(id);
-            }
-        }
+        pollfds.reserve(players.size());
+        playerIds.reserve(players.size());
         
-        if (pollfds.empty()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
+        for (auto& [id, socketFd] : players) {
+            pollfds.push_back(pollfd{socketFd, POLLIN, 0});
+            playerIds.push_back(id);
         }
+        pollfds.push_back(pollfd{wakeupReadFd, POLLIN, 0});
         
-        // Вызываем poll() с таймаутом 1 секунда
+        // Вызываем poll() с таймаутом 1 секунда (на всякий случай)
         int result = poll(pollfds.data(), pollfds.size(), 1000);
-        
-        if (result > 0) {
-            // Обрабатываем готовые сокеты
-            for (size_t i = 0; i < pollfds.size(); ++i) {
-                if (pollfds[i].revents & POLLIN) {
+        if (result == -1) {
+            perror("Lobby error on poll");
+            exit(1);
+        }
+        // Обрабатываем новые данные
+        for (size_t i = 0; i < pollfds.size(); ++i) {
+            auto& [fd, _, revents] = pollfds[i];
+            if (revents & POLLIN) {
+                if (fd == wakeupReadFd) { // Присоединился новый игрок
+                    int newSocketFd;
+                    read(fd, &newSocketFd, sizeof(newSocketFd));
+                    players[nextPlayerId++] = newSocketFd;
+                } else {  // Старый игрок выполнил команду
                     uint32_t playerId = playerIds[i];
-                    int socketFd = pollfds[i].fd;
-                    
                     std::string data;
-                    if (Message::readFromSocket(socketFd, data)) {
+                    if (Message::readFromSocket(fd, data)) {
                         handleCommand(playerId, data);
                     } else {
-                        // Ошибка чтения или соединение закрыто
-                        std::lock_guard<std::mutex> lock(playersMutex);
+                        // Ошибка чтения
+                        std::cout << std::format(
+                            "Failed to parse command ({}) from player {}. Disconnecting.",
+                            data, playerId) << std::endl;
                         players.erase(playerId);
-                        close(socketFd);
+                        close(fd);
                     }
-                } else if (pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                    // Ошибка сокета
-                    uint32_t playerId = playerIds[i];
-                    std::lock_guard<std::mutex> lock(playersMutex);
-                    players.erase(playerId);
-                    close(pollfds[i].fd);
                 }
+            } else if (revents & (POLLERR | POLLHUP | POLLNVAL)) {  // Ошибка сокета
+                uint32_t playerId = playerIds[i];
+                players.erase(playerId);
+                close(fd);
             }
-        } else if (result < 0 && errno != EINTR) {
-            // Ошибка poll
-            break;
         }
     }
 }
@@ -166,13 +139,10 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
             
             // Получаем сокет игрока
             int socketFd = -1;
-            {
-                std::lock_guard<std::mutex> lock(playersMutex);
-                auto it = players.find(playerId);
-                if (it != players.end()) {
-                    socketFd = it->second;
-                    players.erase(it);
-                }
+            auto it = players.find(playerId);
+            if (it != players.end()) {
+                socketFd = it->second;
+                players.erase(it);
             }
             
             if (socketFd < 0) {
@@ -186,7 +156,6 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
             } else {
                 sendToPlayer(playerId, "error: Failed to join room");
                 // Возвращаем сокет обратно в лобби
-                std::lock_guard<std::mutex> lock(playersMutex);
                 players[playerId] = socketFd;
             }
         } else {
@@ -207,7 +176,6 @@ void LobbyHandler::handleCommand(uint32_t playerId, const std::string& command) 
 }
 
 void LobbyHandler::sendToPlayer(uint32_t playerId, const std::string& response) {
-    std::lock_guard<std::mutex> lock(playersMutex);
     auto it = players.find(playerId);
     if (it != players.end()) {
         Message::writeToSocket(it->second, response);

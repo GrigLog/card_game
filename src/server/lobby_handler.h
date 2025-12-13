@@ -12,12 +12,29 @@
 // Обработчик лобби - работает в отдельном потоке
 // Управляет игроками, которые еще не в комнатах
 class LobbyHandler {
+    int wakeupReadFd = -1;
+    RoomManager& roomManager;
+    
+    // Игроки в лобби: playerId -> socketFd
+    std::unordered_map<uint32_t, int> players;
+    //std::mutex playersMutex;
+    
+    // Очередь новых сокетов от AcceptHandler
+    //std::queue<int> newSockets;
+    //std::mutex newSocketsMutex;
+    
+    // Счетчик ID игроков
+    std::atomic<uint32_t> nextPlayerId;
+    
+    // Поток лобби
+    std::thread lobbyThread;
+    std::atomic<bool> running;
 public:
     LobbyHandler(RoomManager& roomManager);
     ~LobbyHandler();
     
     // Запустить поток лобби
-    void start();
+    void start(int wakeupReadFd);
     
     // Остановить поток лобби
     void stop();
@@ -26,23 +43,6 @@ public:
     void addPlayer(int socketFd);
 
 private:
-    RoomManager& roomManager;
-    
-    // Игроки в лобби: playerId -> socketFd
-    std::unordered_map<uint32_t, int> players;
-    std::mutex playersMutex;
-    
-    // Очередь новых сокетов от AcceptHandler
-    std::queue<int> newSockets;
-    std::mutex newSocketsMutex;
-    
-    // Счетчик ID игроков
-    std::atomic<uint32_t> nextPlayerId;
-    
-    // Поток лобби
-    std::thread lobbyThread;
-    std::atomic<bool> running;
-    
     // Основной цикл потока лобби
     void run();
     

@@ -12,25 +12,6 @@ option(BUILD_TESTS "Build tests" OFF)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/common)
 
-# Исходные файлы
-# set(SOURCES
-#     src/Card.cpp
-#     src/Deck.cpp
-#     src/GameEvent.cpp
-#     src/Action.cpp
-#     src/BotStrategy.cpp
-#     src/BotPlayer.cpp
-#     src/HumanPlayer.cpp
-#     src/GameSession.cpp
-#     src/GameServer.cpp
-# )
-
-# # Основной исполняемый файл
-# add_executable(${PROJECT_NAME} 
-#     ${SOURCES}
-#     src/main.cpp
-# )
-
 set (COMMON_SOURCES 
     src/common/common.cpp
     src/common/message.cpp

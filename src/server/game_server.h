@@ -6,19 +6,21 @@
 #include "../common/common.h"
 #include <memory>
 
-// Главный класс сервера
+// RAII класс с основной логикой сервера
 class GameServer {
-    int listenSocketFd;
+    //int listenSocketFd;
     std::unique_ptr<AcceptHandler> acceptHandler;
     std::unique_ptr<RoomManager> roomManager;
     std::unique_ptr<LobbyHandler> lobbyHandler;
     std::atomic<bool> running;
-    
+
+    int lobbyWakeupFd[2];
+
 public:
     GameServer();
     ~GameServer();
     
-    // Запустить сервер
+    // Сервер запускается в текущем потоке (возврат управления будет только после остановки сервера)
     void start();
     
     // Остановить сервер

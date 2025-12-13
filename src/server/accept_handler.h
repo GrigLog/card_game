@@ -7,29 +7,32 @@
 #include <atomic>
 
 // Обработчик приема новых соединений
-// Работает в отдельном потоке
 class AcceptHandler {
-    int listenSocketFd;
-    std::queue<int> newSockets;
-    std::mutex socketsMutex;
-    std::thread acceptThread;
+private:
+    //BlockingQueue<int> newSockets;
+    int listenSocketFd = -1;
+    int wakeupWriteFd = -1;
     std::atomic<bool> running;
 
+    std::thread runThread;
+
 public:
-    AcceptHandler(int listenSocketFd);
+    AcceptHandler();
     ~AcceptHandler();
     
-    // Запустить поток приема
-    void start();
+    // Запустить прием входящих подключений в новом потоке.
+    // Результаты записываются в очередь newSockets.
+    void start(int wakeupWriteFd);
     
     // Остановить поток приема
     void stop();
     
-    // Получить новый сокет (вызывается из GameServer)
-    // Возвращает -1 если нет новых соединений
-    int getNewSocket();
+    // Получить новый сокет (блокирующая операция)
+    //int getNewSocket();
 
 private:
     // Основной цикл потока приема
     void run();
+
+    int createListenSocket();
 };
