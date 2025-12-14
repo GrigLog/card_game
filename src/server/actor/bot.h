@@ -10,5 +10,5 @@ struct Bot : IActor {
     Bot(std::unique_ptr<IBotStrategy>&& strategy, unsigned roomId) 
         : strategy(std::move(strategy)), roomId(roomId) {}
     bool isPlayer() {return false;}
-    std::string getName() override {return "Bot" + roomId;}
+    std::string getName() override {return "Bot" + std::to_string(roomId);}
 };

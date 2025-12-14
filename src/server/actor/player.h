@@ -1,5 +1,6 @@
 #pragma once
 #include "actor.h"
+#include <string>
 
 struct Player : IActor {
     unsigned id;
@@ -8,5 +9,5 @@ struct Player : IActor {
     Player(unsigned id, bool bOwner) : id(id), bOwner(bOwner) {}
     bool isPlayer() override {return true;}
     bool isOwner() override {return bOwner; }
-    std::string getName() override {return "Player" + id;}
+    std::string getName() override {return "Player" + std::to_string(id);}
 };

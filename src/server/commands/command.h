@@ -45,14 +45,13 @@ struct Command {
         {'a', Type::Add}, {'s', Type::Start},
         {'t', Type::Take}, {'e', Type::End}
     };
-    inline static const std::vector<Type> LOBBY_COMMANDS = {Type::List, Type::Create, Type::Join};
-    inline static const std::vector<Type> OWNER_COMMANDS = {Type::Add, Type::Start};
-    inline static const std::vector<Type> GAME_COMMANDS = {Type::Select, Type::Take, Type::End};
+    // inline static const std::vector<Type> LOBBY_COMMANDS = {Type::List, Type::Create, Type::Join};
+    // inline static const std::vector<Type> OWNER_COMMANDS = {Type::Add, Type::Start};
+    // inline static const std::vector<Type> GAME_COMMANDS = {Type::Select, Type::Take, Type::End};
 
-    //todo: delve into constexpr magic to compute the strings properly 
-    inline static const std::string LOBBY_COMMANDS_STR = "list, create, join";
-    inline static const std::string OWNER_COMMANDS_STR = "list, add, start";
-    inline static const std::string GAME_COMMANDS_STR = "select, take, end";
+    inline static const std::string LOBBY_COMMANDS_STR = "list, create <room_name> <max_players>, join <room_name>";
+    inline static const std::string OWNER_COMMANDS_STR = "list, add <random/sorted> [sorted coefficient, e.g. 0.1], start";
+    inline static const std::string GAME_COMMANDS_STR = "select <card_num>, take, end";
 };
 
 // Парсинг команды из строки
