@@ -21,8 +21,8 @@ public:
     const unsigned ownerId;
     const size_t maxPlayers;
 
-    unsigned nextBotId;
-    bool bStarted;
+    unsigned nextBotId = 0;
+    bool bStarted = false;
     
     std::vector<std::unique_ptr<IActor>> actors;
 

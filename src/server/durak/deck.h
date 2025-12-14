@@ -6,7 +6,7 @@
 
 class Deck {
     std::vector<Card> cards;
-    mutable std::mt19937 rng;
+    std::mt19937 rng;
 
 public:
     Deck();

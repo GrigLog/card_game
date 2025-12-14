@@ -14,8 +14,8 @@ struct DurakGame {
     std::vector<std::unique_ptr<IActor>> actors;
     Suit Trump;
 
-    DurakState state;
-    unsigned attackingActor;
+    DurakState state = DurakState::AttackerThinks;
+    unsigned attackingActor = 0;
 
     void processCommand(unsigned playerNum, std::unique_ptr<Command> command);
 };

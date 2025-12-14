@@ -53,7 +53,9 @@ void PlayerManager::run() {
                     read(fd, &newSocketFd, sizeof(newSocketFd));
                     int playerId = nextPlayerId++;
                     players[playerId] = newSocketFd;
-                    sendToPlayer(playerId, "Welcome to Durak Online! Commands available now: " + Command::LOBBY_COMMANDS_STR);
+                    sendToPlayer(playerId, 
+                        "Welcome to Durak Online! Your name is Player" + std::to_string(playerId) + 
+                        ".\nCommands available now: " + Command::LOBBY_COMMANDS_STR);
                     std::cout << "Welcome message sent." << std::endl;
                 } else {  // Старый игрок выполнил команду
                     uint32_t playerId = playerIds[i];
@@ -87,6 +89,12 @@ void PlayerManager::run() {
     }
 }
 
+void PlayerManager::sendToPlayer(uint32_t playerId, const std::string& response) {
+    auto it = players.find(playerId);
+    if (it != players.end()) {
+        Message::writeToSocket(it->second, response);
+    }
+}
 
 std::string PlayerManager::handleCommand(uint32_t playerId, SomeCommand cmd) {
     if (std::holds_alternative<LobbyCommand>(cmd)) {
@@ -99,18 +107,11 @@ std::string PlayerManager::handleCommand(uint32_t playerId, SomeCommand cmd) {
     }
 }
 
-void PlayerManager::sendToPlayer(uint32_t playerId, const std::string& response) {
-    auto it = players.find(playerId);
-    if (it != players.end()) {
-        Message::writeToSocket(it->second, response);
-    }
-}
-
 //You might not believe, but I originally had several Command classes with their own execute() methods, 
 //and it was LESS CONVENIENT
 std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand cmd) {
     auto it = playerToRoom.find(playerId);
-    bool hasRoom = it == playerToRoom.end();
+    bool hasRoom = it != playerToRoom.end();
 
     return std::visit(VisitOverloadUtility{
         [&](ListCommand c) -> std::string {
@@ -171,6 +172,7 @@ std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand c
             
             // Добавляем игрока в комнату
             if (room->addPlayer(playerId)) {
+                playerToRoom[playerId] = room;
                 return "ok: Joined room: " + c.name;
             } else {
                 return "error: Failed to join room";
@@ -186,9 +188,10 @@ std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand c
             for (const auto& actor : room->actors) {
                 if (auto player = dynamic_cast<Player*>(actor.get())) {
                     playerToRoom.erase(player->id);
+                    sendToPlayer(player->id, "Room owner has finished the game. You have been sent back to lobby.");
                 }
             }
-            return "Room closed. All players have been sent back to lobby (including you).";
+            return "ok: Room closed.";
         }
 
     }, std::move(cmd));
