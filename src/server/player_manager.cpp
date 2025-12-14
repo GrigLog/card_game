@@ -186,7 +186,7 @@ std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand c
         [&](FinishCommand c) -> std::string {
             if (!hasRoom)
                 return "error: Must be in a room to use this command";
-            GameRoom* room = it->second.get();
+            std::shared_ptr<GameRoom> room = it->second;
             if (room->ownerId != playerId)
                 return "error: You must be the owner to close the room";
             destroyRoom(room, "Room owner has finished the game. You have been sent back to lobby");
@@ -196,7 +196,7 @@ std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand c
     }, std::move(cmd));
 }
 
-void PlayerManager::destroyRoom(GameRoom* room, const std::string& msg) {
+void PlayerManager::destroyRoom(std::shared_ptr<GameRoom> room, const std::string& msg) {
     for (const auto& actor : room->actors) {
         if (auto player = dynamic_cast<Player*>(actor.get())) {
             sendToPlayer(player->id, msg);

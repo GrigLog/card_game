@@ -59,9 +59,14 @@ Result DurakGame::executePlayerGameCommand(unsigned playerNum, GameCommand cmd) 
             bFinished = true;
         }
     }
-    actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
+    if (actors.size() == 1 || attackingActor == getDefendingActor()) {
+        freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
+        bFinished = true;
+    } else {
+        actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
             std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
             "Your hand: " + Hand::toString(hands[getActiveActor()]));
+    }
     return res;
 }
 
@@ -170,14 +175,22 @@ void DurakGame::checkWin(unsigned playerNum) {
         isPlaying[playerNum] = false;
         winRating.push_back(playerNum);
         freeFormBroadcast(playerNum, "won! Took place: " + std::to_string(winRating.size()));
+        bFinished = true;
     }  
 }
 
 void DurakGame::freeFormBroadcast(int specialNum, const std::string& msg) {
-    for (int i = 0; i < actors.size(); i++) {
-        if (i == specialNum)
-            actors[i]->freeFormNotify("You " + msg);
-        if (i != specialNum && specialNum != -1)
-            actors[i]->freeFormNotify(actors[specialNum]->getName() + " " + msg);
+    if (specialNum == -1) { //everyone gets the same message
+        for (int i = 0; i < actors.size(); i++) {
+            actors[i]->freeFormNotify(msg);
+        }
+    } else {  //personalized message
+        for (int i = 0; i < actors.size(); i++) {
+            if (i == specialNum)
+                actors[i]->freeFormNotify("You " + msg);
+            if (i != specialNum)
+                actors[i]->freeFormNotify(actors[specialNum]->getName() + " " + msg);
+        }
     }
+    
 }

@@ -35,11 +35,11 @@ struct DurakGame {
     DurakGame(const std::vector<std::unique_ptr<IActor>>& actors) : actors(actors) {
         auto trumpCard = deck.getBottom();
         trump = trumpCard.suit;
+        freeFormBroadcast(-1, "Trump card (at the deck bottom): " + trumpCard.toString());
         for (int i = 0; i < actors.size(); i++) {
             auto cards = deck.deal(6);
             hands.push_back(cards);
             actors[i]->tookCards(cards);
-            actors[i]->freeFormNotify("Trump card (at the deck bottom): " + trumpCard.toString());
             isPlaying.push_back(true);
         }
         actors[getActiveActor()]->mustAttack();

@@ -30,7 +30,7 @@ public:
     
     static void sendToPlayer(uint32_t playerId, const std::string& response);
 
-    void destroyRoom(GameRoom* room, const std::string& msg);
+    void destroyRoom(std::shared_ptr<GameRoom> room, const std::string& msg);
 
     // Обработка команды от игрока
     std::string handleCommand(uint32_t playerId, SomeCommand cmd);
