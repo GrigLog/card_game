@@ -28,23 +28,19 @@ set (SERVER_SOURCES
     src/server/player_manager.cpp    
     src/server/player_manager.h    
     src/server/server.cpp
-    src/server/commands/command.cpp
-    src/server/commands/command.h
-    src/server/commands/create.cpp
-    src/server/commands/create.h
-    src/server/commands/finish.h
-    src/server/commands/join.cpp
-    src/server/commands/join.h
-    src/server/commands/list.cpp
-    src/server/commands/list.h
-    src/server/commands/start.h
-    src/server/commands/game/game_command.h
-    src/server/commands/game/add.h
+    src/server/command.cpp
+    src/server/command.h
     src/server/actor/actor.h
     src/server/actor/player.h
     src/server/actor/bot.h
     src/server/actor/strategy.cpp
     src/server/actor/strategy.h
+    src/server/durak/card.cpp
+    src/server/durak/card.h
+    src/server/durak/deck.cpp
+    src/server/durak/deck.h
+    src/server/durak/durak.cpp
+    src/server/durak/durak.h
 )
 
 set (CLIENT_SOURCES src/client/client.cpp)

@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <memory>
 #include "game_room.h"
+#include "command.h"
 
 class PlayerManager{
     std::unordered_map<unsigned, int> players;
@@ -26,11 +27,12 @@ public:
     PlayerManager(int newPlayerPipeFd);
     ~PlayerManager();
     
-    // Обработка команды от игрока
-    void handleCommand(uint32_t playerId, const std::string& command);
-    
     // Отправить ответ игроку
     void sendToPlayer(uint32_t playerId, const std::string& response);
+
+    // Обработка команды от игрока
+    std::string handleCommand(uint32_t playerId, SomeCommand cmd);
+    std::string executeLobbyCommand(unsigned playerId, LobbyCommand cmd);
 private:
     void run();
 };

@@ -1,5 +1,7 @@
 #include "game_room.h"
 #include "actor/player.h"
+#include "common.h"
+#include <variant>
 
 GameRoom::GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
     : name(name), ownerId(ownerId), maxPlayers(maxPlayers) {
@@ -43,4 +45,32 @@ bool GameRoom::isFull() const {
 }
 
 void GameRoom::notifyPlayerLeft(unsigned playerId) {
+}
+
+std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
+    if (std::holds_alternative<RoomCommand>(cmd))
+        return executeRoomCommand(playerId, std::get<RoomCommand>(std::move(cmd)));
+    //todo: pass further
+}
+
+std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
+    return std::visit(VisitOverloadUtility{
+        [&](AddCommand c) -> std::string {
+            if (bStarted)
+                return "error: The game has already started";
+            if (isFull())
+                return "error: No free player slots";
+            addBot(std::move(c.strategy));
+            return "ok: bot added";
+        },
+
+        [&](StartCommand c) -> std::string {
+            if (ownerId != playerId)
+                return "error: You must be the owner to start the game";
+            if (bStarted)
+                return "error: The game has already started";
+            bStarted = true;
+            return "ok: Game started. It's your turn.";
+        }
+    }, std::move(cmd));
 }

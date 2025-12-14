@@ -7,6 +7,8 @@
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
+#include <variant>
+#include "command.h"
 
 #include "actor/actor.h"
 #include "actor/bot.h"
@@ -46,6 +48,9 @@ public:
     bool isFull() const;
 
     void notifyPlayerLeft(unsigned playerId);
+
+    std::string handleCommand(unsigned playerId, SomeCommand cmd);
+    std::string executeRoomCommand(unsigned playerId, RoomCommand cmd);
 
     ~GameRoom() {
         allRooms.erase(name);

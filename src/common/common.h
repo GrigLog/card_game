@@ -7,6 +7,6 @@ constexpr unsigned short PORT = 6969;
 
 // Utility to allow overloading lambdas for use in std::visit
 template<class... Ts>
-struct overload : Ts... {
+struct VisitOverloadUtility : Ts... {
     using Ts::operator()...;
 };

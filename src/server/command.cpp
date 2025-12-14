@@ -1,33 +1,27 @@
 #include "command.h"
-#include "create.h"
-#include "join.h"
-#include "list.h"
 #include <sstream>
-#include "../actor/strategy.h"
-#include "game/add.h"
-#include "finish.h"
-#include "start.h"
+#include "actor/strategy.h"
 
 
-std::unique_ptr<Command> parseCommand(const std::string& commandStr) {
+std::optional<SomeCommand> parseCommand(const std::string& commandStr) {
     std::istringstream iss(commandStr);
     std::string cmd;
     iss >> cmd;
 
     if (cmd.empty())
-        return nullptr;
+        return {};
     auto it = Command::FIRST_LETTERS.find(cmd[0]);
     if (it == Command::FIRST_LETTERS.end()) {
         try {
             int num = std::stoi(cmd);
-            return nullptr; //todo: return SelectCommand
+            return std::optional{SelectCommand(num)}; //todo: remove std::optional?
         } catch (...) {}
-        return nullptr;
+        return {};
     }
     Command::Type type = it->second;
     const std::string& fullCommand = Command::KNOWN_COMMANDS[static_cast<int>(type)];
     if (fullCommand.size() < cmd.size() || fullCommand.substr(0, cmd.size()) != cmd)
-        return nullptr;
+        return {};
     
     
     switch (type) {
@@ -35,27 +29,31 @@ std::unique_ptr<Command> parseCommand(const std::string& commandStr) {
         std::string name;
         size_t maxPlayers;
         if (iss >> name >> maxPlayers) {
-            return std::make_unique<CreateCommand>(name, maxPlayers);
+            return std::optional{CreateCommand(name, maxPlayers)};
         }
-        return nullptr;
+        return {};
     } case Command::Type::Join: {
         std::string name;
         if (iss >> name) {
-            return std::make_unique<JoinCommand>(name);
+            return std::optional{JoinCommand(name)};
         }
-        return nullptr;
+        return {};
     } case Command::Type::List: {
-        return std::make_unique<ListCommand>();
+        return std::optional{ListCommand()};
     } case Command::Type::Add: {
         if (auto strat = IBotStrategy::parse(iss))
-            return std::make_unique<AddCommand>(std::move(strat));
-        return nullptr;
+            return std::optional{AddCommand(std::move(strat))};
+        return {};
     } case Command::Type::Start: {
-        return std::make_unique<StartCommand>();
+        return std::optional{StartCommand()};
     } case Command::Type::Finish: {
-        return std::make_unique<FinishCommand>();
-    } default:
-        return nullptr;
+        return std::optional{FinishCommand()};
+    } case Command::Type::Take: {
+        return std::optional{TakeCommand()};
+    } case Command::Type::End: {
+        return std::optional{FinishCommand()};
+    }default:
+        return {};
     }
 }
 

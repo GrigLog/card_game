@@ -4,22 +4,50 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <optional>
+#include <variant>
+#include "actor/strategy.h"
 
 class GameRoom;
 
+struct ListCommand{};
+struct CreateCommand{std::string name; size_t maxPlayers;};
+struct JoinCommand{std::string name;};
+
+struct AddCommand{std::unique_ptr<IBotStrategy> strategy;};
+struct StartCommand{};
+struct FinishCommand{};
+
+struct SelectCommand{unsigned cardNum;};
+struct TakeCommand{};
+struct EndCommand{};
+
+using LobbyCommand = std::variant<ListCommand, CreateCommand, JoinCommand, FinishCommand>;
+using RoomCommand = std::variant<AddCommand, StartCommand>;
+using GameCommand = std::variant<SelectCommand, TakeCommand, EndCommand>;
+
+using SomeCommand = std::variant<LobbyCommand, RoomCommand, GameCommand>;
+
 // Базовый класс для всех команд
 struct Command {
-    virtual ~Command() = default;
+    //Паттерн Chain of Responsibility. Это поле определяет уровень обработки команды
+    // enum class Level : uint8_t {
+    //     Lobby,
+    //     Room,
+    //     Game
+    // };
+
+    // virtual Level getLevel() {return Level::Lobby;}
     
     // Выполнить команду
     // playerIdToRoomId - маппинг игрок -> комната
     // rooms - все комнаты
     // playerId - ID игрока, выполняющего команду
     // Возвращает ответное сообщение для игрока
-    virtual std::string execute(
-        unsigned playerId,
-        std::unordered_map<unsigned, std::shared_ptr<GameRoom>>& playerToRoom
-    ) = 0;
+    // virtual std::string execute(
+    //     unsigned playerId,
+    //     std::unordered_map<unsigned, std::shared_ptr<GameRoom>>& playerToRoom
+    // ) = 0;
 
     enum class Type : uint8_t {
         List = 0,
@@ -56,5 +84,5 @@ struct Command {
 
 // Парсинг команды из строки
 // Возвращает unique_ptr с Command, или nullptr если команда не распознана
-std::unique_ptr<Command> parseCommand(const std::string& commandStr);
+std::optional<SomeCommand> parseCommand(const std::string& commandStr);
 
