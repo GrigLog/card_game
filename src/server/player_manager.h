@@ -28,12 +28,15 @@ public:
     PlayerManager(int newPlayerPipeFd);
     ~PlayerManager();
     
-    // Отправить ответ игроку
     static void sendToPlayer(uint32_t playerId, const std::string& response);
+
+    void destroyRoom(GameRoom* room, const std::string& msg);
 
     // Обработка команды от игрока
     std::string handleCommand(uint32_t playerId, SomeCommand cmd);
     std::string executeLobbyCommand(unsigned playerId, LobbyCommand cmd);
 private:
     void run();
+
+    
 };

@@ -73,8 +73,12 @@ void PlayerManager::run() {
                             "Failed to parse command ({}) from player {}. Disconnecting.",
                             data, playerId) << std::endl;
                         if (auto it = playerToRoom.find(playerId); it != playerToRoom.end()) {
+                            //todo: don't destroy the room lol
                             it->second->notifyPlayerLeft(playerId);
                             playerToRoom.erase(it);
+                            //auto room = it->second;
+                            //it->second->playerIdToActorNum[playerId]
+                            //destroyRoom(it->second.get(), "Someone has left the game. You have been sent back to lobby.");
                         }
                         players.erase(playerId);
                         close(fd);
@@ -185,14 +189,18 @@ std::string PlayerManager::executeLobbyCommand(unsigned playerId, LobbyCommand c
             GameRoom* room = it->second.get();
             if (room->ownerId != playerId)
                 return "error: You must be the owner to close the room";
-            for (const auto& actor : room->actors) {
-                if (auto player = dynamic_cast<Player*>(actor.get())) {
-                    playerToRoom.erase(player->id);
-                    sendToPlayer(player->id, "Room owner has finished the game. You have been sent back to lobby.");
-                }
-            }
+            destroyRoom(room, "Room owner has finished the game. You have been sent back to lobby");
             return "ok: Room closed.";
         }
 
     }, std::move(cmd));
+}
+
+void PlayerManager::destroyRoom(GameRoom* room, const std::string& msg) {
+    for (const auto& actor : room->actors) {
+        if (auto player = dynamic_cast<Player*>(actor.get())) {
+            sendToPlayer(player->id, msg);
+            playerToRoom.erase(player->id);
+        }
+    }
 }

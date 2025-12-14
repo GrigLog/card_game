@@ -2,11 +2,13 @@
 #include "actor/actor.h"
 #include "common.h"
 #include <variant>
+#include "player_manager.h"
 
 GameRoom::GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
     : name(name), ownerId(ownerId), maxPlayers(maxPlayers) {
-        actors.emplace_back(new Player{ownerId, true});
-        //usedNames.emplace(name);
+    playerIdToActorNum[ownerId] = actors.size();
+    actors.emplace_back(new Player{ownerId, true});
+    //usedNames.emplace(name);
 }
 
 std::vector<const GameRoom*> GameRoom::getAllRooms() {
@@ -27,6 +29,7 @@ bool GameRoom::addPlayer(unsigned playerId) {
     if (isFull()) {
         return false;
     }
+    playerIdToActorNum[playerId] = actors.size();
     actors.emplace_back(new Player(playerId, false));
     return true;
 }
@@ -45,6 +48,18 @@ bool GameRoom::isFull() const {
 }
 
 void GameRoom::notifyPlayerLeft(unsigned playerId) {
+    int num = playerIdToActorNum[playerId];
+    std::string name = actors[num]->getName();
+    for (const auto& [pid, num] : playerIdToActorNum) {
+        if (pid != playerId) //writing to an invalidated socket causes segfault
+            PlayerManager::sendToPlayer(pid, name + " left.");
+    }
+    if (bStarted) {
+        gameOpt.value().notifyPlayerLeft(num);
+    }
+    actors.erase(actors.begin() + num);
+    playerIdToActorNum.erase(playerId);
+    
 }
 
 void GameRoom::start() {
@@ -65,7 +80,7 @@ std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
     auto result = gameOpt.value().executeAndBroadcastGameCommand(playerIdToActorNum[playerId], 
         std::get<GameCommand>(std::move(cmd)));
     //broadcast successful actions
-    return (result.first ? "ok: " : "error: ") + result.second;
+    return (result.first ? "ok. " : "error: ") + result.second;
 }
 
 std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {

@@ -44,6 +44,8 @@ struct DurakGame {
         actors[getActiveActor()]->mustAttack();
     }
 
+    void notifyPlayerLeft(unsigned playerNum);
+
     Result executeAndBroadcastGameCommand(unsigned playerNum, GameCommand cmd);
 
 private:

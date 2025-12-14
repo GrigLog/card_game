@@ -2,6 +2,7 @@
 #include "common.h"
 #include "hand.h"
 #include <algorithm>
+#include "../player_manager.h"
 
 unsigned DurakGame::getActiveActor() const {
     return state == DurakState::AttackerThinks ? attackingActor : getDefendingActor();
@@ -15,14 +16,36 @@ unsigned DurakGame::getDefendingActor() const {
     return i;
 }
 
+void DurakGame::notifyPlayerLeft(unsigned playerNum) {
+    //todo: replace with a bot
+    isPlaying[playerNum] = false;
+    int defendingActor = getDefendingActor();
+    if (playerNum == attackingActor) {
+        if (state == DurakState::AttackerThinks) {
+            executeAndBroadcastGameCommand(attackingActor, EndCommand());
+        } else {
+            executeAndBroadcastGameCommand(defendingActor, TakeCommand()); //I'm sorry
+        }
+    } else if (playerNum == defendingActor) {
+        if (state == DurakState::AttackerThinks) {
+            executeAndBroadcastGameCommand(attackingActor, EndCommand());  //I'm sorry
+        } else {
+            executeAndBroadcastGameCommand(defendingActor, TakeCommand()); 
+        }
+    }
+    hands.erase(hands.begin() + playerNum);
+    isPlaying.erase(isPlaying.begin() + playerNum);
+}
+
 Result DurakGame::executeAndBroadcastGameCommand(unsigned playerNum, GameCommand cmd) {
     auto res = executeGameCommand(playerNum, cmd);
-    if (res.first) {
-        auto name = actors[playerNum]->getName();
-        freeFormBroadcast(playerNum, name + ": " + res.second);
-    }
+    // if (res.first) {
+    //     auto name = actors[playerNum]->getName();
+    //     freeFormBroadcast(playerNum, name + ": " + res.second);
+    // }
     if (attackingActor == getDefendingActor()) {
-        freeFormBroadcast(-1, "Game finished!");
+        freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
+        
     } else {
         actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
             std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
@@ -34,7 +57,7 @@ Result DurakGame::executeAndBroadcastGameCommand(unsigned playerNum, GameCommand
 Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
     unsigned active = getActiveActor();
     if (playerNum != active)
-        return {false, "It's not your turn yet. Wait for " + std::to_string(active) + " to " + \
+        return {false, "It's not your turn yet. Wait for " + actors[active]->getName() + " to " + \
         (state == DurakState::AttackerThinks ? "attack" : "defend")};
     std::vector<Card>& hand = hands[active];
     return std::visit(VisitOverloadUtility{
@@ -48,9 +71,10 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                     attackingCard = selCard;
                     table.push_back(selCard);
                     hand.erase(hand.begin() + trueNum);
+                    freeFormBroadcast(active, "attacked with " + selCard.toString());
                     checkWin(active);
                     state = DurakState::DefenderThinks;
-                    return {true, "Attacked with " + selCard.toString()};
+                    return {true, ""};
                 } else if (!table.empty()) {
                     return {false, "Can't add this card"};
                 }
@@ -59,9 +83,10 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                     attackingCard = {};
                     table.push_back(selCard);
                     hand.erase(hand.begin() + trueNum);
+                    freeFormBroadcast(active, "defended with " + selCard.toString());
                     checkWin(active);
                     state = DurakState::AttackerThinks;
-                    return {true, "Defended with " + selCard.toString()};
+                    return {true, ""};
                 } else {
                     return {false, "This card can't beat the attacking card"};
                 }
@@ -75,12 +100,13 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                 std::string tableStr = Hand::toString(table);
                 attackingCard = {};
                 hand.append_range(table);
+                freeFormBroadcast(active, "took the cards: " + tableStr);
                 table.clear();
                 fillHand(attackingActor);
                 attackingActor = getDefendingActor(); //skip the turn
                 attackingActor = getDefendingActor();
                 state = DurakState::AttackerThinks;
-                return {true, "Took the cards: " + tableStr};
+                return {true, ""};
             }
         },
 
@@ -90,11 +116,12 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
             } else {
                 attackingCard = {};
                 table.clear();
+                freeFormBroadcast(active, "finished the attack");
                 fillHand(getDefendingActor());
                 fillHand(attackingActor);
                 attackingActor = getDefendingActor();
                 state = DurakState::AttackerThinks;
-                return {true, "Attack has ended"};
+                return {true, ""};
             }
         }
     }, std::move(cmd));
@@ -117,14 +144,15 @@ void DurakGame::checkWin(unsigned playerNum) {
     if (hands[playerNum].size() == 0 && deck.size() == 0) {
         isPlaying[playerNum] = false;
         winRating.push_back(playerNum);
-        freeFormBroadcast(-1, 
-            actors[playerNum]->getName() + " won! Took place: " + std::to_string(winRating.size()));
+        freeFormBroadcast(playerNum, "won! Took place: " + std::to_string(winRating.size()));
     }  
 }
 
-void DurakGame::freeFormBroadcast(int excludeNum, const std::string& msg) {
+void DurakGame::freeFormBroadcast(int specialNum, const std::string& msg) {
     for (int i = 0; i < actors.size(); i++) {
-        if (i != excludeNum)
-            actors[i]->freeFormNotify(msg);
+        if (i == specialNum)
+            actors[i]->freeFormNotify("You " + msg);
+        if (i != specialNum)
+            actors[i]->freeFormNotify(actors[specialNum]->getName() + " " + msg);
     }
 }

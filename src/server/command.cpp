@@ -51,7 +51,7 @@ std::optional<SomeCommand> parseCommand(const std::string& commandStr) {
     } case Command::Type::Take: {
         return std::optional{TakeCommand()};
     } case Command::Type::End: {
-        return std::optional{FinishCommand()};
+        return std::optional{EndCommand()};
     }default:
         return {};
     }
