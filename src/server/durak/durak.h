@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "../actor/actor.h"
 #include "../command.h"
+#include "../actor/actor.h"
 #include "card.h"
 #include "deck.h"
 #include "common.h"
@@ -19,7 +19,8 @@ struct DurakGame {
 
     std::vector<bool> isPlaying;
     std::vector<unsigned> winRating; //the first actor index is the winner, the last one is the loser
-    
+    bool bFinished = false;
+
     Deck deck;
     Suit trump;
 
@@ -46,7 +47,8 @@ struct DurakGame {
 
     void notifyPlayerLeft(unsigned playerNum);
 
-    Result executeAndBroadcastGameCommand(unsigned playerNum, GameCommand cmd);
+    Result executePlayerGameCommand(unsigned playerNum, GameCommand cmd);
+    Result executeActorGameCommand(unsigned playerNum, GameCommand cmd);
 
 private:
     Result executeGameCommand(unsigned playerNum, GameCommand cmd);

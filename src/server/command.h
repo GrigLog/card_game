@@ -6,9 +6,8 @@
 #include <vector>
 #include <optional>
 #include <variant>
-#include "actor/strategy.h"
 
-class GameRoom;
+struct IBotStrategy;
 
 struct ListCommand{};
 struct CreateCommand{std::string name; size_t maxPlayers;};
@@ -28,27 +27,7 @@ using GameCommand = std::variant<SelectCommand, TakeCommand, EndCommand>;
 
 using SomeCommand = std::variant<LobbyCommand, RoomCommand, GameCommand>;
 
-// Базовый класс для всех команд
 struct Command {
-    //Паттерн Chain of Responsibility. Это поле определяет уровень обработки команды
-    // enum class Level : uint8_t {
-    //     Lobby,
-    //     Room,
-    //     Game
-    // };
-
-    // virtual Level getLevel() {return Level::Lobby;}
-    
-    // Выполнить команду
-    // playerIdToRoomId - маппинг игрок -> комната
-    // rooms - все комнаты
-    // playerId - ID игрока, выполняющего команду
-    // Возвращает ответное сообщение для игрока
-    // virtual std::string execute(
-    //     unsigned playerId,
-    //     std::unordered_map<unsigned, std::shared_ptr<GameRoom>>& playerToRoom
-    // ) = 0;
-
     enum class Type : uint8_t {
         List = 0,
         Create,
@@ -73,9 +52,6 @@ struct Command {
         {'a', Type::Add}, {'s', Type::Start}, {'f', Type::Finish},
         {'t', Type::Take}, {'e', Type::End}
     };
-    // inline static const std::vector<Type> LOBBY_COMMANDS = {Type::List, Type::Create, Type::Join};
-    // inline static const std::vector<Type> OWNER_COMMANDS = {Type::Add, Type::Start};
-    // inline static const std::vector<Type> GAME_COMMANDS = {Type::Select, Type::Take, Type::End};
 
     inline static const std::string LOBBY_COMMANDS_STR = "list, create <room_name> <max_players>, join <room_name>";
     inline static const std::string OWNER_COMMANDS_STR = "list, add <random/sorted> [sorted coefficient, e.g. 0.1], start, finish";

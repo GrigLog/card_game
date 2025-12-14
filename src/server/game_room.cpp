@@ -77,7 +77,7 @@ std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
         return executeRoomCommand(playerId, std::get<RoomCommand>(std::move(cmd)));
     if (!bStarted)
         return "error: This comman only works in-game";
-    auto result = gameOpt.value().executeAndBroadcastGameCommand(playerIdToActorNum[playerId], 
+    auto result = gameOpt.value().executePlayerGameCommand(playerIdToActorNum[playerId], 
         std::get<GameCommand>(std::move(cmd)));
     //broadcast successful actions
     return (result.first ? "ok. " : "error: ") + result.second;
