@@ -1,6 +1,7 @@
-#include "strategy.h"
 #include <string>
+#include <algorithm>
 #include "../durak/durak.h"
+#include "strategy.h"
 
 std::unique_ptr<IBotStrategy> IBotStrategy::parse(std::istream& iss) {
     std::string name;
@@ -36,7 +37,8 @@ GameCommand IBotStrategy::generateCommand(const DurakGame& game) {
             int idx = selectFromAvailable(filteredHand, game.trump);
             if (idx == -1)
                 return EndCommand();
-            return SelectCommand(idx + 1);
+            int realIdx = std::find(hand.begin(), hand.end(), filteredHand[idx]) - hand.begin();
+            return SelectCommand(realIdx + 1);
         }
     } else {
         std::vector<Card> filteredHand;
@@ -48,7 +50,8 @@ GameCommand IBotStrategy::generateCommand(const DurakGame& game) {
         int idx = selectFromAvailable(filteredHand, game.trump);
         if (idx == -1)
             return TakeCommand();
-        return SelectCommand(idx + 1);
+        int realIdx = std::find(hand.begin(), hand.end(), filteredHand[idx]) - hand.begin();
+        return SelectCommand(realIdx + 1);
     }
 }
 

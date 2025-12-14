@@ -42,37 +42,39 @@ Result DurakGame::executePlayerGameCommand(unsigned playerNum, GameCommand cmd) 
         freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
     }
     auto res = executeActorGameCommand(playerNum, cmd);
-    auto active = getActiveActor();
-    while (!bFinished && !actors[active]->isPlayer()) {
-        if (auto bot = dynamic_cast<Bot*>(actors[active].get())) {
+    while (!bFinished && !actors[getActiveActor()]->isPlayer()) {
+        if (auto bot = dynamic_cast<Bot*>(actors[getActiveActor()].get())) {
             GameCommand cmd = bot->strategy->generateCommand(*this);
-            Result r = executeActorGameCommand(active, cmd);
+            Result r = executeActorGameCommand(getActiveActor(), cmd);
             if (!r.first) {
                 cmd = FallbackStrategy{}.generateCommand(*this);
-            }
-            r = executeActorGameCommand(active, cmd);
-            if (!r.first) {
-                std::cerr << "This bot is hardstuck" << std::endl;
-                bFinished = true;
+                r = executeActorGameCommand(getActiveActor(), cmd);
+                if (!r.first) {
+                    std::cerr << "This bot is hardstuck" << std::endl;
+                    bFinished = true;
+                }
             }
         } else {
             std::cerr << "Something is terribly wrong with this bot" << std::endl;
             bFinished = true;
         }
     }
+    actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
+            std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
+            "Your hand: " + Hand::toString(hands[getActiveActor()]));
     return res;
 }
 
 Result DurakGame::executeActorGameCommand(unsigned playerNum, GameCommand cmd) {
     auto res = executeGameCommand(playerNum, cmd);
-    if (actors.size() == 1 || attackingActor == getDefendingActor()) {
+    /*if (actors.size() == 1 || attackingActor == getDefendingActor()) {
         freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
         bFinished = true;
     } else {
         actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
             std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
             "Your hand: " + Hand::toString(hands[getActiveActor()]));
-    }
+    }*/
     return res;
 }
 
@@ -175,7 +177,7 @@ void DurakGame::freeFormBroadcast(int specialNum, const std::string& msg) {
     for (int i = 0; i < actors.size(); i++) {
         if (i == specialNum)
             actors[i]->freeFormNotify("You " + msg);
-        if (i != specialNum)
+        if (i != specialNum && specialNum != -1)
             actors[i]->freeFormNotify(actors[specialNum]->getName() + " " + msg);
     }
 }
