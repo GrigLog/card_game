@@ -49,10 +49,11 @@ std::string Card::toString() const {
     }
     
     // Ранг
-    if (rank >= Rank::Six && rank <= Rank::Ten) {
+    if (rank >= Rank::Six && rank < Rank::Ten) {
         result += static_cast<char>('0' + static_cast<int>(rank));
     } else {
         switch (rank) {
+            case Rank::Ten: result += "10"; break;
             case Rank::Jack: result += 'J'; break;
             case Rank::Queen: result += 'Q'; break;
             case Rank::King: result += 'K'; break;

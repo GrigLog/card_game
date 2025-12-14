@@ -35,7 +35,9 @@ struct DurakGame {
         auto trumpCard = deck.getBottom();
         trump = trumpCard.suit;
         for (int i = 0; i < actors.size(); i++) {
-            fillHand(i);
+            auto cards = deck.deal(6);
+            hands.push_back(cards);
+            actors[i]->tookCards(cards);
             actors[i]->freeFormNotify("Trump card (at the deck bottom): " + trumpCard.toString());
             isPlaying.push_back(true);
         }
@@ -49,4 +51,5 @@ private:
 
     void fillHand(unsigned playerNum);
     void checkWin(unsigned playerNum);
+    void freeFormBroadcast(int excludeNum, const std::string& msg);
 };

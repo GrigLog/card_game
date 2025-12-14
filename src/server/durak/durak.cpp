@@ -19,14 +19,15 @@ Result DurakGame::executeAndBroadcastGameCommand(unsigned playerNum, GameCommand
     auto res = executeGameCommand(playerNum, cmd);
     if (res.first) {
         auto name = actors[playerNum]->getName();
-        for (int i = 0; i < actors.size(); i++) {
-            if (i != playerNum)
-                actors[i]->freeFormNotify(name + ": " + res.second);
-        }
+        freeFormBroadcast(playerNum, name + ": " + res.second);
     }
-    actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
-        std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
-        "Your hand: " + Hand::toString(hands[getActiveActor()]));
+    if (attackingActor == getDefendingActor()) {
+        freeFormBroadcast(-1, "Game finished!");
+    } else {
+        actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
+            std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
+            "Your hand: " + Hand::toString(hands[getActiveActor()]));
+    }
     return res;
 }
 
@@ -47,8 +48,8 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                     attackingCard = selCard;
                     table.push_back(selCard);
                     hand.erase(hand.begin() + trueNum);
+                    checkWin(active);
                     state = DurakState::DefenderThinks;
-                    //todo: check win
                     return {true, "Attacked with " + selCard.toString()};
                 } else if (!table.empty()) {
                     return {false, "Can't add this card"};
@@ -58,11 +59,11 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                     attackingCard = {};
                     table.push_back(selCard);
                     hand.erase(hand.begin() + trueNum);
+                    checkWin(active);
                     state = DurakState::AttackerThinks;
-                    //todo: check win
                     return {true, "Defended with " + selCard.toString()};
                 } else {
-                    return {false, "This card is weaker than attacking card"};
+                    return {false, "This card can't beat the attacking card"};
                 }
             }
         },
@@ -116,5 +117,14 @@ void DurakGame::checkWin(unsigned playerNum) {
     if (hands[playerNum].size() == 0 && deck.size() == 0) {
         isPlaying[playerNum] = false;
         winRating.push_back(playerNum);
+        freeFormBroadcast(-1, 
+            actors[playerNum]->getName() + " won! Took place: " + std::to_string(winRating.size()));
     }  
+}
+
+void DurakGame::freeFormBroadcast(int excludeNum, const std::string& msg) {
+    for (int i = 0; i < actors.size(); i++) {
+        if (i != excludeNum)
+            actors[i]->freeFormNotify(msg);
+    }
 }
