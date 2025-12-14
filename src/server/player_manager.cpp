@@ -47,7 +47,10 @@ void PlayerManager::run() {
                 if (fd == newPlayerPipeFd) { // Присоединился новый игрок
                     int newSocketFd;
                     read(fd, &newSocketFd, sizeof(newSocketFd));
-                    players[nextPlayerId++] = newSocketFd;
+                    int playerId = nextPlayerId++;
+                    players[playerId] = newSocketFd;
+                    sendToPlayer(playerId, "Welcome to Durak Online! Commands available now: " + Command::LOBBY_COMMANDS_STR);
+                    std::cout << "Welcome message sent." << std::endl;
                 } else {  // Старый игрок выполнил команду
                     uint32_t playerId = playerIds[i];
                     std::string data;
@@ -76,7 +79,7 @@ void PlayerManager::handleCommand(uint32_t playerId, const std::string& command)
     auto cmd = parseCommand(command);
     
     if (!cmd) {
-        sendToPlayer(playerId, "error: Unknown command. Use: create, join, list");
+        sendToPlayer(playerId, "error: Unknown command.");
         return;
     }
     

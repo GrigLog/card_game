@@ -10,6 +10,9 @@ std::string JoinCommand::execute(
     std::unordered_map<unsigned, std::string>& playerIdToRoomId,
     std::unordered_map<std::string, std::unique_ptr<GameRoom>>& rooms
 ) {
+    if (auto it = playerIdToRoomId.find(playerId); it != playerIdToRoomId.end()) {
+        return "error: You are already in a room: " + it->second;
+    }
     auto it = rooms.find(name);
     if (it == rooms.end()) {
         return "error: Room not found";

@@ -23,7 +23,6 @@ int main(int argc, char** argv) {
         exit(1);
     }
     cout << "Connected to game server." << endl;
-    cout << "Commands: create <name> <players>, join <name>, list" << endl;
     
     string line;
     while (getline(cin, line)) {

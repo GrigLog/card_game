@@ -36,6 +36,13 @@ set (SERVER_SOURCES
     src/server/commands/join.h
     src/server/commands/list.cpp
     src/server/commands/list.h
+    src/server/commands/game/game_command.h
+    src/server/commands/game/add.h
+    src/server/actor/actor.h
+    src/server/actor/player.h
+    src/server/actor/bot.h
+    src/server/actor/strategy.cpp
+    src/server/actor/strategy.h
 )
 
 set (CLIENT_SOURCES src/client/client.cpp)
