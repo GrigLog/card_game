@@ -49,6 +49,7 @@ public:
 
     ~GameRoom() {
         allRooms.erase(name);
+        std::cout << "Room '" << name << "' was deleted." << std::endl;
     }
 private:
     

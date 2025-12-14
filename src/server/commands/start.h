@@ -13,6 +13,8 @@ struct StartCommand : Command {
         if (room->ownerId != playerId)
             return "error: You must be the owner to start the game";
         
+        if (room->bStarted)
+            return "error: The game has already started";
         room->bStarted = true;
         return "ok: Game started. It's your turn.";
     }
