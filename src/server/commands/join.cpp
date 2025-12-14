@@ -7,23 +7,22 @@ JoinCommand::JoinCommand(const std::string& name)
 
 std::string JoinCommand::execute(
     unsigned playerId,
-    std::unordered_map<unsigned, std::string>& playerIdToRoomId,
-    std::unordered_map<std::string, std::unique_ptr<GameRoom>>& rooms
+    std::unordered_map<unsigned, std::shared_ptr<GameRoom>>& playerToRoom
 ) {
-    if (auto it = playerIdToRoomId.find(playerId); it != playerIdToRoomId.end()) {
-        return "error: You are already in a room: " + it->second;
+    if (auto it = playerToRoom.find(playerId); it != playerToRoom.end()) {
+        return "error: You are already in a room: " + it->second->name;
     }
-    auto it = rooms.find(name);
-    if (it == rooms.end()) {
+    auto it = GameRoom::allRooms.find(name);
+    if (it == GameRoom::allRooms.end() || it->second.expired()) {
         return "error: Room not found";
     }
-    
-    if (it->second->isFull()) {
+    auto room = it->second.lock();
+    if (room->isFull()) {
         return "error: Room is full";
     }
     
     // Добавляем игрока в комнату
-    if (it->second->addPlayer(playerId)) {
+    if (room->addPlayer(playerId)) {
         return "ok: Joined room: " + name;
     } else {
         return "error: Failed to join room";

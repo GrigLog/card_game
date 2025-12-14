@@ -61,6 +61,10 @@ void PlayerManager::run() {
                         std::cout << std::format(
                             "Failed to parse command ({}) from player {}. Disconnecting.",
                             data, playerId) << std::endl;
+                        if (auto it = playerToRoom.find(playerId); it != playerToRoom.end()) {
+                            it->second->notifyPlayerLeft(playerId);
+                            playerToRoom.erase(it);
+                        }
                         players.erase(playerId);
                         close(fd);
                     }
@@ -83,7 +87,7 @@ void PlayerManager::handleCommand(uint32_t playerId, const std::string& command)
         return;
     }
     
-    std::string response = cmd->execute(static_cast<unsigned>(playerId), playerIdToRoomId, rooms);
+    std::string response = cmd->execute(static_cast<unsigned>(playerId), playerToRoom);
     sendToPlayer(playerId, response);
 }
 

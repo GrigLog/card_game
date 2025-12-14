@@ -14,8 +14,7 @@
 
 class PlayerManager{
     std::unordered_map<unsigned, int> players;
-    std::unordered_map<unsigned, std::string> playerIdToRoomId;
-    std::unordered_map<std::string, std::unique_ptr<GameRoom>> rooms;
+    std::unordered_map<unsigned, std::shared_ptr<GameRoom>> playerToRoom;
 
     int newPlayerPipeFd = -1;
     int nextPlayerId = 0;

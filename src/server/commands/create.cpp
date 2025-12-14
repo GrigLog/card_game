@@ -7,23 +7,21 @@ CreateCommand::CreateCommand(const std::string& name, size_t maxPlayers)
 
 std::string CreateCommand::execute(
     unsigned playerId,
-    std::unordered_map<unsigned, std::string>& playerIdToRoomId,
-    std::unordered_map<std::string, std::unique_ptr<GameRoom>>& rooms
+    std::unordered_map<unsigned, std::shared_ptr<GameRoom>>& playerToRoom
 ) {
     if (maxPlayers < 2 || maxPlayers > 6) {
         return "error: Invalid number of players (2-6)";
     }
-    if (playerIdToRoomId.contains(playerId)) {
+    if (playerToRoom.contains(playerId)) {
         return "error: You are already in a room";
     }
-    if (rooms.find(name) != rooms.end()) {
-        return "error: Room already exists";
+    if (GameRoom::allRooms.contains(name)) {
+        return "error: Room with this name already exists";
     }
     
-    std::unique_ptr<GameRoom> room = std::make_unique<GameRoom>(name, playerId, maxPlayers);
+    std::shared_ptr<GameRoom> room = GameRoom::make(name, playerId, maxPlayers);
     if (room.get()) {
-        rooms[name] = std::move(room);
-        playerIdToRoomId[playerId] = name;
+        playerToRoom[playerId] = room;
         return std::format("ok: Room '{}' created. You are the owner. "\
             "Start the game when there is enough players. Commands available: {}", 
             name, Command::OWNER_COMMANDS_STR);

@@ -5,6 +5,8 @@
 #include <sstream>
 #include "../actor/strategy.h"
 #include "game/add.h"
+#include "finish.h"
+#include "start.h"
 
 
 std::unique_ptr<Command> parseCommand(const std::string& commandStr) {
@@ -48,6 +50,10 @@ std::unique_ptr<Command> parseCommand(const std::string& commandStr) {
         if (auto strat = IBotStrategy::parse(iss))
             return std::make_unique<AddCommand>(std::move(strat));
         return nullptr;
+    } case Command::Type::Start: {
+        return std::make_unique<StartCommand>();
+    } case Command::Type::Finish: {
+        return std::make_unique<FinishCommand>();
     } default:
         return nullptr;
     }
