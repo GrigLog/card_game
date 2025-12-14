@@ -22,7 +22,7 @@ bool Card::beats(const Card& other, Suit trump) const {
     return false;
 }
 
-bool Card::canAttack(const std::vector<Card>& table, Suit trump) const {
+bool Card::canAttack(const std::vector<Card>& table) const {
     if (table.empty()) {
         return true; // Первая карта в атаке
     }

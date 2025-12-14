@@ -30,9 +30,8 @@ set (SERVER_SOURCES
     src/server/server.cpp
     src/server/command.cpp
     src/server/command.h
+    src/server/actor/actor.cpp
     src/server/actor/actor.h
-    src/server/actor/player.h
-    src/server/actor/bot.h
     src/server/actor/strategy.cpp
     src/server/actor/strategy.h
     src/server/durak/card.cpp
@@ -41,6 +40,7 @@ set (SERVER_SOURCES
     src/server/durak/deck.h
     src/server/durak/durak.cpp
     src/server/durak/durak.h
+    src/server/durak/hand.h
 )
 
 set (CLIENT_SOURCES src/client/client.cpp)

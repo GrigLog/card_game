@@ -7,7 +7,7 @@
 #include <variant>
 #include <optional>
 #include "common.h"
-#include "actor/player.h"
+#include "actor/actor.h"
 
  PlayerManager::PlayerManager(int newPlayerPipeFd) 
     : newPlayerPipeFd(newPlayerPipeFd) {

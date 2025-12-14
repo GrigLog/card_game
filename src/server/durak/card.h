@@ -33,7 +33,7 @@ struct Card {
     bool beats(const Card& other, Suit trump) const;
     
     // Проверка, можно ли атаковать этой картой (совпадает ли ранг с уже выложенными)
-    bool canAttack(const std::vector<Card>& table, Suit trump) const;
+    bool canAttack(const std::vector<Card>& table) const;
     
     // Сериализация в строку (формат: "S6" для пики 6, "HA" для червового туза)
     std::string toString() const;

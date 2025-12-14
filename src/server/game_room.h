@@ -9,9 +9,11 @@
 #include <unordered_map>
 #include <variant>
 #include "command.h"
+#include "durak/durak.h"
+#include <optional>
+#include <vector>
 
 #include "actor/actor.h"
-#include "actor/bot.h"
 
 // Игровая комната - принимает команды игроков и как-то на них реагирует.
 // Не имеет своего потока (кроме, может, таймаута?)
@@ -23,8 +25,10 @@ public:
 
     unsigned nextBotId = 0;
     bool bStarted = false;
+    std::optional<DurakGame> gameOpt{};
     
     std::vector<std::unique_ptr<IActor>> actors;
+    std::unordered_map<unsigned, unsigned> playerIdToActorNum;
 
     //NOTE: should be refreshed from time to time to remove null pointers
     inline static std::unordered_map<std::string, std::weak_ptr<GameRoom>> allRooms;
@@ -41,13 +45,13 @@ public:
     static std::vector<const GameRoom*> getAllRooms();
     
     bool addPlayer(unsigned playerId);
-
     bool addBot(std::unique_ptr<IBotStrategy>&& strategy);
     
-    // Проверить, полна ли комната
     bool isFull() const;
 
     void notifyPlayerLeft(unsigned playerId);
+
+    void start();
 
     std::string handleCommand(unsigned playerId, SomeCommand cmd);
     std::string executeRoomCommand(unsigned playerId, RoomCommand cmd);

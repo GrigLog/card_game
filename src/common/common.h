@@ -10,3 +10,5 @@ template<class... Ts>
 struct VisitOverloadUtility : Ts... {
     using Ts::operator()...;
 };
+
+using Result = std::pair<bool, std::string>;

@@ -1,5 +1,5 @@
 #include "game_room.h"
-#include "actor/player.h"
+#include "actor/actor.h"
 #include "common.h"
 #include <variant>
 
@@ -47,10 +47,25 @@ bool GameRoom::isFull() const {
 void GameRoom::notifyPlayerLeft(unsigned playerId) {
 }
 
+void GameRoom::start() {
+    bStarted = true;
+    gameOpt.emplace(actors);
+    for (int i = 0; i < actors.size(); i++) {
+        if (auto player = dynamic_cast<Player*>(actors[i].get())) {
+            playerIdToActorNum[player->id] = i;
+        }
+    }
+}
+
 std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
     if (std::holds_alternative<RoomCommand>(cmd))
         return executeRoomCommand(playerId, std::get<RoomCommand>(std::move(cmd)));
-    //todo: pass further
+    if (!bStarted)
+        return "error: This comman only works in-game";
+    auto result = gameOpt.value().executeAndBroadcastGameCommand(playerIdToActorNum[playerId], 
+        std::get<GameCommand>(std::move(cmd)));
+    //broadcast successful actions
+    return (result.first ? "ok: " : "error: ") + result.second;
 }
 
 std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
@@ -69,7 +84,7 @@ std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
                 return "error: You must be the owner to start the game";
             if (bStarted)
                 return "error: The game has already started";
-            bStarted = true;
+            start();
             return "ok: Game started. It's your turn.";
         }
     }, std::move(cmd));

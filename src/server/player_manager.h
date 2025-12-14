@@ -1,3 +1,4 @@
+#pragma once
 #include <sstream>
 #include <unistd.h>
 #include <fcntl.h>
@@ -14,7 +15,7 @@
 #include "command.h"
 
 class PlayerManager{
-    std::unordered_map<unsigned, int> players;
+    inline static std::unordered_map<unsigned, int> players; //todo: singleton, idk
     std::unordered_map<unsigned, std::shared_ptr<GameRoom>> playerToRoom;
 
     int newPlayerPipeFd = -1;
@@ -28,7 +29,7 @@ public:
     ~PlayerManager();
     
     // Отправить ответ игроку
-    void sendToPlayer(uint32_t playerId, const std::string& response);
+    static void sendToPlayer(uint32_t playerId, const std::string& response);
 
     // Обработка команды от игрока
     std::string handleCommand(uint32_t playerId, SomeCommand cmd);
