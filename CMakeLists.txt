@@ -75,6 +75,38 @@ if(BUILD_TESTS)
 
 endif()
 
-# Установка (опционально)
-# install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-# install(DIRECTORY include/ DESTINATION include)
+
+# Настройка clang-format
+find_program(CLANG_FORMAT "clang-format")
+
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_SOURCE_FILES 
+        "src/*.cpp"
+        "src/*.c"
+        "src/*.h"
+        "src/*.hpp"
+        "src/*.cc"
+        "src/*.cxx"
+        "src/*.hh"
+        "src/*.hxx"
+    )
+    
+    # Создаем кастомные таргеты
+    add_custom_target(format-check
+        COMMAND ${CLANG_FORMAT} --dry-run 
+            --style=file:${CMAKE_CURRENT_SOURCE_DIR}/.clang-format-yandex 
+            --Werror ${ALL_SOURCE_FILES}
+        COMMENT "Checking code style with clang-format"
+        VERBATIM
+    )
+    
+    add_custom_target(format-fix
+        COMMAND ${CLANG_FORMAT} -i 
+            --style=file:${CMAKE_CURRENT_SOURCE_DIR}/.clang-format-yandex 
+            ${ALL_SOURCE_FILES}
+        COMMENT "Fixing code style with clang-format"
+        VERBATIM
+    )
+else()
+    message(WARNING "clang-format not found! Format targets will not be available.")
+endif()
