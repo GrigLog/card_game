@@ -22,15 +22,15 @@ void DurakGame::notifyPlayerLeft(unsigned playerNum) {
     int defendingActor = getDefendingActor();
     if (playerNum == attackingActor) {
         if (state == DurakState::AttackerThinks) {
-            executeActorGameCommand(attackingActor, EndCommand());
+            executeGameCommand(attackingActor, EndCommand());
         } else {
-            executeActorGameCommand(defendingActor, TakeCommand()); //I'm sorry
+            executeGameCommand(defendingActor, TakeCommand()); //I'm sorry
         }
     } else if (playerNum == defendingActor) {
         if (state == DurakState::AttackerThinks) {
-            executeActorGameCommand(attackingActor, EndCommand());  //I'm sorry
+            executeGameCommand(attackingActor, EndCommand());  //I'm sorry
         } else {
-            executeActorGameCommand(defendingActor, TakeCommand()); 
+            executeGameCommand(defendingActor, TakeCommand()); 
         }
     }
     hands.erase(hands.begin() + playerNum);
@@ -41,14 +41,14 @@ Result DurakGame::executePlayerGameCommand(unsigned playerNum, GameCommand cmd) 
     if (bFinished) {
         freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
     }
-    auto res = executeActorGameCommand(playerNum, cmd);
+    auto res = executeGameCommand(playerNum, cmd);
     while (!bFinished && !actors[getActiveActor()]->isPlayer()) {
         if (auto bot = dynamic_cast<Bot*>(actors[getActiveActor()].get())) {
             GameCommand cmd = bot->strategy->generateCommand(*this);
-            Result r = executeActorGameCommand(getActiveActor(), cmd);
+            Result r = executeGameCommand(getActiveActor(), cmd);
             if (!r.first) {
                 cmd = FallbackStrategy{}.generateCommand(*this);
-                r = executeActorGameCommand(getActiveActor(), cmd);
+                r = executeGameCommand(getActiveActor(), cmd);
                 if (!r.first) {
                     std::cerr << "This bot is hardstuck" << std::endl;
                     bFinished = true;
@@ -67,19 +67,6 @@ Result DurakGame::executePlayerGameCommand(unsigned playerNum, GameCommand cmd) 
             std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
             "Your hand: " + Hand::toString(hands[getActiveActor()]));
     }
-    return res;
-}
-
-Result DurakGame::executeActorGameCommand(unsigned playerNum, GameCommand cmd) {
-    auto res = executeGameCommand(playerNum, cmd);
-    /*if (actors.size() == 1 || attackingActor == getDefendingActor()) {
-        freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
-        bFinished = true;
-    } else {
-        actors[getActiveActor()]->freeFormNotify("It's your turn to " + \
-            std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" + \
-            "Your hand: " + Hand::toString(hands[getActiveActor()]));
-    }*/
     return res;
 }
 
@@ -120,6 +107,7 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                     return {false, "This card can't beat the attacking card"};
                 }
             }
+            return {false, ""}; //Never actually returned but let's make the compiler happy
         },
 
         [&](TakeCommand c) -> Result {

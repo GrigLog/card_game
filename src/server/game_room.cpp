@@ -99,8 +99,10 @@ std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
                 return "error: You must be the owner to start the game";
             if (bStarted)
                 return "error: The game has already started";
+            if (actors.size() < 2)
+                return "error: Not enough players";
             start();
-            return "ok: Game started. It's your turn.";
+            return "ok.";
         }
     }, std::move(cmd));
 }

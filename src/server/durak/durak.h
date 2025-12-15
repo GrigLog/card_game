@@ -48,7 +48,6 @@ struct DurakGame {
     void notifyPlayerLeft(unsigned playerNum);
 
     Result executePlayerGameCommand(unsigned playerNum, GameCommand cmd);
-    Result executeActorGameCommand(unsigned playerNum, GameCommand cmd);
 
 private:
     Result executeGameCommand(unsigned playerNum, GameCommand cmd);
