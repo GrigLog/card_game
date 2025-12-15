@@ -1,13 +1,15 @@
 #pragma once
+
 #include <vector>
 #include <memory>
-#include "../command.h"
-#include "../actor/actor.h"
-#include "card.h"
-#include "deck.h"
-#include "common.h"
 
-//Note: values do matter
+#include "../actor/actor.h"
+#include "../command.h"
+#include "card.h"
+#include "common.h"
+#include "deck.h"
+
+// Note: values do matter
 enum class DurakState : uint8_t {
     AttackerThinks = 0,
     DefenderThinks = 1
@@ -18,7 +20,7 @@ struct DurakGame {
     std::vector<std::vector<Card>> hands;
 
     std::vector<bool> isPlaying;
-    std::vector<unsigned> winRating; //the first actor index is the winner, the last one is the loser
+    std::vector<unsigned> winRating; // the first actor index is the winner, the last one is the loser
     bool bFinished = false;
 
     Deck deck;
@@ -32,7 +34,8 @@ struct DurakGame {
     unsigned getActiveActor() const;
     unsigned getDefendingActor() const;
 
-    DurakGame(const std::vector<std::unique_ptr<IActor>>& actors) : actors(actors) {
+    DurakGame(const std::vector<std::unique_ptr<IActor>>& actors)
+        : actors(actors) {
         auto trumpCard = deck.getBottom();
         trump = trumpCard.suit;
         freeFormBroadcast(-1, "Trump card (at the deck bottom): " + trumpCard.toString());

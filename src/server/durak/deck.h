@@ -1,8 +1,9 @@
 #pragma once
 
-#include "card.h"
 #include <vector>
 #include <random>
+
+#include "card.h"
 
 class Deck {
     std::vector<Card> cards;
@@ -10,18 +11,21 @@ class Deck {
 
 public:
     Deck();
-    
+
     Card draw();
-    
-    bool empty() const { return cards.empty(); }
-    
+
+    bool empty() const {
+        return cards.empty();
+    }
+
     // Количество оставшихся карт
-    size_t size() const { return cards.size(); }
-    
+    size_t size() const {
+        return cards.size();
+    }
+
     // Раздать карты (возвращает вектор карт)
     std::vector<Card> deal(size_t count);
-    
+
     // Показать нижнюю карту (будет козырной)
     Card getBottom() const;
 };
-

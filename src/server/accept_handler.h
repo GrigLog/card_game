@@ -1,20 +1,21 @@
 #pragma once
 
-#include "../common/common.h"
-#include <queue>
-#include <mutex>
-#include <thread>
 #include <atomic>
-#include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <errno.h>
+#include <iostream>
+#include <mutex>
+#include <netinet/in.h>
+#include <queue>
+#include <sys/socket.h>
+#include <thread>
+#include <unistd.h>
+
+#include "../common/common.h"
 
 // Обработчик приема новых соединений
 class AcceptHandler {
 private:
-    //BlockingQueue<int> newSockets;
+    // BlockingQueue<int> newSockets;
     int listenSocketFd = -1;
     int newPlayerPipeFd = -1;
 
@@ -22,10 +23,10 @@ private:
     std::thread runThread;
 
 public:
-    AcceptHandler(int newPlayerPipeFd) 
-    : newPlayerPipeFd(newPlayerPipeFd) {
+    AcceptHandler(int newPlayerPipeFd)
+        : newPlayerPipeFd(newPlayerPipeFd) {
         listenSocketFd = createListenSocket();
-        //std::cout << "listening socket = " << listenSocketFd << std::endl;
+        // std::cout << "listening socket = " << listenSocketFd << std::endl;
         runThread = std::thread(&AcceptHandler::run, this);
     }
 
@@ -33,8 +34,10 @@ public:
         running = false;
         std::cout << "AcceptHandler is stopping..." << std::endl;
         if (listenSocketFd >= 0) {
-            //std::cout << "closed listening socket " << listenSocketFd << std::endl;
-            shutdown(listenSocketFd, SHUT_RDWR);  //NOTE: only shutdown() guarantees escaping blocking functions such as accept()
+            // std::cout << "closed listening socket " << listenSocketFd << std::endl;
+            shutdown(listenSocketFd,
+                     SHUT_RDWR); // NOTE: only shutdown() guarantees escaping
+                                 // blocking functions such as accept()
             close(listenSocketFd);
         }
         if (runThread.joinable()) {

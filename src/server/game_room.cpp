@@ -1,22 +1,25 @@
 #include "game_room.h"
+
+#include <variant>
+
 #include "actor/actor.h"
 #include "common.h"
-#include <variant>
 #include "player_manager.h"
 
 GameRoom::GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
-    : name(name), ownerId(ownerId), maxPlayers(maxPlayers) {
+    : name(name)
+    , ownerId(ownerId)
+    , maxPlayers(maxPlayers) {
     playerIdToActorNum[ownerId] = actors.size();
     actors.emplace_back(new Player{ownerId, true});
-    //usedNames.emplace(name);
 }
 
 std::vector<const GameRoom*> GameRoom::getAllRooms() {
     std::vector<const GameRoom*> res;
-    for (auto it = GameRoom::allRooms.begin(); it != GameRoom::allRooms.end(); ) {
-        if (it->second.expired())
+    for (auto it = GameRoom::allRooms.begin(); it != GameRoom::allRooms.end();) {
+        if (it->second.expired()) {
             it = GameRoom::allRooms.erase(it);
-        else {
+        } else {
             res.push_back(it->second.lock().get());
             it++;
         }
@@ -25,7 +28,7 @@ std::vector<const GameRoom*> GameRoom::getAllRooms() {
 }
 
 bool GameRoom::addPlayer(unsigned playerId) {
-    //std::lock_guard<std::mutex> lock(playersMutex);
+    // std::lock_guard<std::mutex> lock(playersMutex);
     if (isFull()) {
         return false;
     }
@@ -43,7 +46,7 @@ bool GameRoom::addBot(std::unique_ptr<IBotStrategy>&& strategy) {
 }
 
 bool GameRoom::isFull() const {
-    //std::lock_guard<std::mutex> lock(playersMutex);
+    // std::lock_guard<std::mutex> lock(playersMutex);
     return actors.size() >= maxPlayers;
 }
 
@@ -51,15 +54,15 @@ void GameRoom::notifyPlayerLeft(unsigned playerId) {
     int num = playerIdToActorNum[playerId];
     std::string name = actors[num]->getName();
     for (const auto& [pid, num] : playerIdToActorNum) {
-        if (pid != playerId) //writing to an invalidated socket causes segfault
+        if (pid != playerId) { // writing to an invalidated socket causes segfault
             PlayerManager::sendToPlayer(pid, name + " left.");
+        }
     }
     if (bStarted) {
         gameOpt.value().notifyPlayerLeft(num);
     }
     actors.erase(actors.begin() + num);
     playerIdToActorNum.erase(playerId);
-    
 }
 
 void GameRoom::start() {
@@ -73,36 +76,44 @@ void GameRoom::start() {
 }
 
 std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
-    if (std::holds_alternative<RoomCommand>(cmd))
+    if (std::holds_alternative<RoomCommand>(cmd)) {
         return executeRoomCommand(playerId, std::get<RoomCommand>(std::move(cmd)));
-    if (!bStarted)
+    }
+    if (!bStarted) {
         return "error: This comman only works in-game";
-    auto result = gameOpt.value().executePlayerGameCommand(playerIdToActorNum[playerId], 
-        std::get<GameCommand>(std::move(cmd)));
-    //broadcast successful actions
+    }
+    auto result = gameOpt.value().executePlayerGameCommand(
+        playerIdToActorNum[playerId], std::get<GameCommand>(std::move(cmd)));
+    // broadcast successful actions
     return (result.first ? "ok. " : "error: ") + result.second;
 }
 
 std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
-    return std::visit(VisitOverloadUtility{
-        [&](AddCommand c) -> std::string {
-            if (bStarted)
-                return "error: The game has already started";
-            if (isFull())
-                return "error: No free player slots";
-            addBot(std::move(c.strategy));
-            return "ok: bot added";
-        },
+    return std::visit(
+        VisitOverloadUtility{
+            [&](AddCommand c) -> std::string {
+                if (bStarted) {
+                    return "error: The game has already started";
+                }
+                if (isFull()) {
+                    return "error: No free player slots";
+                }
+                addBot(std::move(c.strategy));
+                return "ok: bot added";
+            },
 
-        [&](StartCommand c) -> std::string {
-            if (ownerId != playerId)
-                return "error: You must be the owner to start the game";
-            if (bStarted)
-                return "error: The game has already started";
-            if (actors.size() < 2)
-                return "error: Not enough players";
-            start();
-            return "ok.";
-        }
-    }, std::move(cmd));
+            [&](StartCommand c) -> std::string {
+                if (ownerId != playerId) {
+                    return "error: You must be the owner to start the game";
+                }
+                if (bStarted) {
+                    return "error: The game has already started";
+                }
+                if (actors.size() < 2) {
+                    return "error: Not enough players";
+                }
+                start();
+                return "ok.";
+            }},
+        std::move(cmd));
 }

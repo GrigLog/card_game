@@ -1,21 +1,23 @@
 #pragma once
-#include <sstream>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <errno.h>
 #include <algorithm>
-#include <thread>
 #include <chrono>
+#include <errno.h>
+#include <fcntl.h>
 #include <iostream>
 #include <map>
-#include <unordered_map>
 #include <memory>
-#include "game_room.h"
-#include "command.h"
+#include <sstream>
+#include <sys/socket.h>
+#include <thread>
+#include <unistd.h>
+#include <unordered_map>
 
-class PlayerManager{
-    inline static std::unordered_map<unsigned, int> players; //todo: singleton, idk
+#include "command.h"
+#include "game_room.h"
+
+class PlayerManager {
+    inline static std::unordered_map<unsigned, int>
+        players; // todo: singleton, idk
     std::unordered_map<unsigned, std::shared_ptr<GameRoom>> playerToRoom;
 
     int newPlayerPipeFd = -1;
@@ -27,7 +29,7 @@ class PlayerManager{
 public:
     PlayerManager(int newPlayerPipeFd);
     ~PlayerManager();
-    
+
     static void sendToPlayer(uint32_t playerId, const std::string& response);
 
     void destroyRoom(std::shared_ptr<GameRoom> room, const std::string& msg);
@@ -35,8 +37,7 @@ public:
     // Обработка команды от игрока
     std::string handleCommand(uint32_t playerId, SomeCommand cmd);
     std::string executeLobbyCommand(unsigned playerId, LobbyCommand cmd);
+
 private:
     void run();
-
-    
 };

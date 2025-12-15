@@ -13,8 +13,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/common)
 
 set (COMMON_SOURCES 
-    src/common/common.cpp
+    src/common/common.h
     src/common/message.cpp
+    src/common/message.h
 )
 
 set (SERVER_SOURCES 
@@ -52,59 +53,36 @@ target_compile_features(${PROJECT_NAME}_client PUBLIC cxx_std_23)
 target_compile_features(${PROJECT_NAME}_server PUBLIC cxx_std_23)
 
 # Тесты
-# if(BUILD_TESTS)
-#     enable_testing()
+if(BUILD_TESTS)
+    enable_testing()
     
-#     # Поиск Google Test
-#     include(FetchContent)
-#     FetchContent_Declare(
-#         googletest
-#         GIT_REPOSITORY https://github.com/google/googletest.git
-#         GIT_TAG v1.14.0
-#     )
-    
-#     # Для Windows: отключаем установку googletest
-#     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-#     FetchContent_MakeAvailable(googletest)
-    
-#     # Файлы тестов
-#     file(GLOB TEST_SOURCES "test/*.cpp")
-    
-#     foreach(TEST_SOURCE ${TEST_SOURCES})
-#         get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
-#         add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
-#         target_link_libraries(${TEST_NAME} 
-#             PRIVATE 
-#             GTest::gtest 
-#             GTest::gtest_main
-#             GTest::gmock
-#         )
-#         target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-#         add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-#     endforeach()
-# endif()
-
-# Проверка стиля кодирования с помощью clang-format
-find_program(CLANG_FORMAT clang-format)
-if(CLANG_FORMAT)
-    # Получаем все исходные файлы C++
-    file(GLOB_RECURSE ALL_SOURCES 
-        ${CMAKE_SOURCE_DIR}/src/*.cpp
-        ${CMAKE_SOURCE_DIR}/include/*.h
-        ${CMAKE_SOURCE_DIR}/test/*.cpp
+    # Поиск Google Test
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
     )
     
-    add_custom_target(format-check
-        COMMAND ${CLANG_FORMAT} --dry-run --Werror ${ALL_SOURCES}
-        COMMENT "Checking code style with clang-format"
-    )
+    # Для Windows: отключаем установку googletest
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
     
-    add_custom_target(format-fix
-        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCES}
-        COMMENT "Fixing code style with clang-format"
-    )
-else()
-    message(WARNING "clang-format not found. Code style checking will be skipped.")
+    # Файлы тестов
+    file(GLOB TEST_SOURCES "test/*.cpp")
+    
+    foreach(TEST_SOURCE ${TEST_SOURCES})
+        get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+        add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
+        target_link_libraries(${TEST_NAME} 
+            PRIVATE 
+            GTest::gtest 
+            GTest::gtest_main
+            GTest::gmock
+        )
+        target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+        add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    endforeach()
 endif()
 
 # Установка (опционально)

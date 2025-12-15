@@ -1,9 +1,11 @@
 #include "actor.h"
-#include "../player_manager.h"
+
 #include "../durak/hand.h"
+#include "../player_manager.h"
+
 
 void Player::freeFormNotify(const std::string& msg) {
-        PlayerManager::sendToPlayer(id, msg);
+    PlayerManager::sendToPlayer(id, msg);
 }
 
 void Player::canDefend(const Card& attackedBy) {

@@ -1,19 +1,18 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <cstdint>
 #include <mutex>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
-#include <variant>
-#include "command.h"
-#include "durak/durak.h"
 #include <optional>
+#include <queue>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include "actor/actor.h"
+#include "command.h"
+#include "durak/durak.h"
 
 // Игровая комната - принимает команды игроков и как-то на них реагирует.
 // Не имеет своего потока (кроме, может, таймаута?)
@@ -26,27 +25,29 @@ public:
     unsigned nextBotId = 0;
     bool bStarted = false;
     std::optional<DurakGame> gameOpt{};
-    
+
     std::vector<std::unique_ptr<IActor>> actors;
     std::unordered_map<unsigned, unsigned> playerIdToActorNum;
 
-    //NOTE: should be refreshed from time to time to remove null pointers
-    inline static std::unordered_map<std::string, std::weak_ptr<GameRoom>> allRooms;
+    // NOTE: should be refreshed from time to time to remove null pointers
+    inline static std::unordered_map<std::string, std::weak_ptr<GameRoom>>
+        allRooms;
 
 public:
-    static std::shared_ptr<GameRoom> make(const std::string& name, uint32_t ownerId, size_t maxPlayers) {
+    static std::shared_ptr<GameRoom> make(const std::string& name,
+                                          uint32_t ownerId, size_t maxPlayers) {
         auto res = std::make_shared<GameRoom>(name, ownerId, maxPlayers);
         allRooms[name] = std::weak_ptr(res);
         return res;
     }
-    //I can't declare it as private but please don't use it
+    // I can't declare it as private but please don't use it
     GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers);
 
     static std::vector<const GameRoom*> getAllRooms();
-    
+
     bool addPlayer(unsigned playerId);
     bool addBot(std::unique_ptr<IBotStrategy>&& strategy);
-    
+
     bool isFull() const;
 
     void notifyPlayerLeft(unsigned playerId);
@@ -60,6 +61,6 @@ public:
         allRooms.erase(name);
         std::cout << "Room '" << name << "' was deleted." << std::endl;
     }
+
 private:
-    
 };

@@ -1,11 +1,13 @@
 #include "deck.h"
+
 #include <algorithm>
 #include <random>
 #include <chrono>
 
-Deck::Deck() : rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
+Deck::Deck()
+    : rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
     cards.reserve(36); // Стандартная колода для дурака
-    
+
     // Создаем все карты от 6 до туза для каждой масти
     for (int s = 0; s < 4; ++s) {
         Suit suit = static_cast<Suit>(s);
@@ -41,4 +43,3 @@ Card Deck::getBottom() const {
     }
     return cards[0];
 }
-
