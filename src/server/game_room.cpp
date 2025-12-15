@@ -3,7 +3,7 @@
 #include <variant>
 
 #include "actor/actor.h"
-#include "common.h"
+#include "common/common.h"
 #include "player_manager.h"
 
 GameRoom::GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)

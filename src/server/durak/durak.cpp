@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "common.h"
+#include "common/common.h"
 #include "hand.h"
 #include "../player_manager.h"
 

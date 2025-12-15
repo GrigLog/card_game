@@ -6,7 +6,7 @@
 #include "../actor/actor.h"
 #include "../command.h"
 #include "card.h"
-#include "common.h"
+#include "common/common.h"
 #include "deck.h"
 
 // Note: values do matter

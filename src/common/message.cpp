@@ -1,4 +1,4 @@
-#include "message.h"
+#include "common/message.h"
 
 #include <arpa/inet.h>
 #include <cstring>

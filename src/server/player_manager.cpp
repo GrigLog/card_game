@@ -8,8 +8,8 @@
 
 #include "actor/actor.h"
 #include "command.h"
-#include "common.h"
-#include "message.h"
+#include "common/common.h"
+#include "common/message.h"
 
 
 PlayerManager::PlayerManager(int newPlayerPipeFd)

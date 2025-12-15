@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Опции сборки
-option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_TESTS "Build tests" ON)
 
 # Включаем директории
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/src/common)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set (COMMON_SOURCES 
     src/common/common.h
@@ -18,6 +18,7 @@ set (COMMON_SOURCES
     src/common/message.h
 )
 
+# server.cpp is excluded from SERVER_SOURCES because we don't want to include the main() method
 set (SERVER_SOURCES 
     src/server/accept_handler.cpp
     src/server/accept_handler.h
@@ -28,7 +29,6 @@ set (SERVER_SOURCES
     src/server/pipe_wrapper.h
     src/server/player_manager.cpp    
     src/server/player_manager.h    
-    src/server/server.cpp
     src/server/command.cpp
     src/server/command.h
     src/server/actor/actor.cpp
@@ -44,45 +44,35 @@ set (SERVER_SOURCES
     src/server/durak/hand.h
 )
 
-set (CLIENT_SOURCES src/client/client.cpp)
+# set (CLIENT_SOURCES ...)
 
-add_executable(${PROJECT_NAME}_client ${CLIENT_SOURCES} ${COMMON_SOURCES})
-add_executable(${PROJECT_NAME}_server ${SERVER_SOURCES} ${COMMON_SOURCES})
+add_executable(${PROJECT_NAME}_client src/client/client.cpp ${COMMON_SOURCES})
+add_executable(${PROJECT_NAME}_server src/server/server.cpp ${SERVER_SOURCES} ${COMMON_SOURCES})
 
 target_compile_features(${PROJECT_NAME}_client PUBLIC cxx_std_23)
 target_compile_features(${PROJECT_NAME}_server PUBLIC cxx_std_23)
 
 # Тесты
 if(BUILD_TESTS)
-    enable_testing()
-    
-    # Поиск Google Test
     include(FetchContent)
     FetchContent_Declare(
         googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.14.0
+        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
     )
-    
-    # Для Windows: отключаем установку googletest
-    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+
+    file(GLOB TEST_SOURCES "src/test/*.cpp")
+
+    add_executable(test_card_game ${TEST_SOURCES} ${SERVER_SOURCES} ${COMMON_SOURCES})
+    target_link_libraries(test_card_game GTest::gtest_main)
     
-    # Файлы тестов
-    file(GLOB TEST_SOURCES "test/*.cpp")
-    
-    foreach(TEST_SOURCE ${TEST_SOURCES})
-        get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
-        add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
-        target_link_libraries(${TEST_NAME} 
-            PRIVATE 
-            GTest::gtest 
-            GTest::gtest_main
-            GTest::gmock
-        )
-        target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-        add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-    endforeach()
+
+    include(GoogleTest)
+    gtest_discover_tests(test_card_game)
+
+
 endif()
 
 # Установка (опционально)
