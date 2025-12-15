@@ -11,7 +11,7 @@ TEST(CardTest, CardEquality) {
     Card card1(Suit::Hearts, Rank::Ace);
     Card card2(Suit::Hearts, Rank::Ace);
     Card card3(Suit::Spades, Rank::Ace);
-    
+
     EXPECT_EQ(card1, card2);
     EXPECT_NE(card1, card3);
 }
@@ -30,5 +30,3 @@ TEST(CardTest, CardToString) {
     std::string str = card.toString();
     EXPECT_STREQ(card.toString().c_str(), "HA");
 }
-
-

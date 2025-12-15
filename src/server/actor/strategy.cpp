@@ -5,7 +5,6 @@
 
 #include "../durak/durak.h"
 
-
 std::unique_ptr<IBotStrategy> IBotStrategy::parse(std::istream& iss) {
     std::string name;
     if (iss >> name) {

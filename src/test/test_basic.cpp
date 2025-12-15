@@ -4,4 +4,3 @@
 TEST(BasicTest, CommonIncludeWorks) {
     EXPECT_EQ(PORT, 6969);
 }
-

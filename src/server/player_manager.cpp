@@ -11,7 +11,6 @@
 #include "common/common.h"
 #include "common/message.h"
 
-
 PlayerManager::PlayerManager(int newPlayerPipeFd)
     : newPlayerPipeFd(newPlayerPipeFd) {
     runThread = std::thread(&PlayerManager::run, this);
