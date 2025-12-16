@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-bool Card::beats(const Card& other, Suit trump) const {
+bool TCard::Beats(const TCard& other, ESuit trump) const {
     // Козырная карта бьет некозырную
     if (suit == trump && other.suit != trump) {
         return true;
@@ -22,7 +22,7 @@ bool Card::beats(const Card& other, Suit trump) const {
     return false;
 }
 
-bool Card::canAttack(const std::vector<Card>& table) const {
+bool TCard::CanAttack(const std::vector<TCard>& table) const {
     if (table.empty()) {
         return true; // Первая карта в атаке
     }
@@ -37,43 +37,43 @@ bool Card::canAttack(const std::vector<Card>& table) const {
     return false;
 }
 
-std::string Card::toString() const {
+std::string TCard::ToString() const {
     std::string result;
 
     // Масть
     switch (suit) {
-        case Suit::Spades:
+        case ESuit::Spades:
             result += 'S';
             break;
-        case Suit::Clubs:
+        case ESuit::Clubs:
             result += 'C';
             break;
-        case Suit::Diamonds:
+        case ESuit::Diamonds:
             result += 'D';
             break;
-        case Suit::Hearts:
+        case ESuit::Hearts:
             result += 'H';
             break;
     }
 
     // Ранг
-    if (rank >= Rank::Six && rank < Rank::Ten) {
+    if (rank >= ERank::Six && rank < ERank::Ten) {
         result += static_cast<char>('0' + static_cast<int>(rank));
     } else {
         switch (rank) {
-            case Rank::Ten:
+            case ERank::Ten:
                 result += "10";
                 break;
-            case Rank::Jack:
+            case ERank::Jack:
                 result += 'J';
                 break;
-            case Rank::Queen:
+            case ERank::Queen:
                 result += 'Q';
                 break;
-            case Rank::King:
+            case ERank::King:
                 result += 'K';
                 break;
-            case Rank::Ace:
+            case ERank::Ace:
                 result += 'A';
                 break;
             default:
@@ -85,60 +85,60 @@ std::string Card::toString() const {
     return result;
 }
 
-Card Card::fromString(const std::string& str) {
+TCard TCard::FromString(const std::string& str) {
     if (str.length() < 2) {
         throw std::invalid_argument("Invalid card string: " + str);
     }
 
-    Suit suit;
+    ESuit suit;
     switch (str[0]) {
         case 'S':
         case 's':
-            suit = Suit::Spades;
+            suit = ESuit::Spades;
             break;
         case 'C':
         case 'c':
-            suit = Suit::Clubs;
+            suit = ESuit::Clubs;
             break;
         case 'D':
         case 'd':
-            suit = Suit::Diamonds;
+            suit = ESuit::Diamonds;
             break;
         case 'H':
         case 'h':
-            suit = Suit::Hearts;
+            suit = ESuit::Hearts;
             break;
         default:
             throw std::invalid_argument("Invalid suit: " + str);
     }
 
-    Rank rank;
+    ERank rank;
     if (str[1] >= '6' && str[1] <= '9') {
-        rank = static_cast<Rank>(str[1] - '0');
+        rank = static_cast<ERank>(str[1] - '0');
     } else if (str[1] == '1' && str.length() >= 3 && str[2] == '0') {
-        rank = Rank::Ten;
+        rank = ERank::Ten;
     } else {
         switch (str[1]) {
             case 'J':
             case 'j':
-                rank = Rank::Jack;
+                rank = ERank::Jack;
                 break;
             case 'Q':
             case 'q':
-                rank = Rank::Queen;
+                rank = ERank::Queen;
                 break;
             case 'K':
             case 'k':
-                rank = Rank::King;
+                rank = ERank::King;
                 break;
             case 'A':
             case 'a':
-                rank = Rank::Ace;
+                rank = ERank::Ace;
                 break;
             default:
                 throw std::invalid_argument("Invalid rank: " + str);
         }
     }
 
-    return Card(suit, rank);
+    return TCard(suit, rank);
 }

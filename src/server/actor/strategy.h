@@ -6,39 +6,41 @@
 #include "../command.h"
 #include "../durak/card.h"
 
-struct DurakGame;
+struct TDurakGame;
 
-struct IBotStrategy {
-    static std::unique_ptr<IBotStrategy> parse(std::istream& iss);
+class IBotStrategy {
+public:
+    static std::unique_ptr<IBotStrategy> Parse(std::istream& iss);
 
-    virtual GameCommand generateCommand(const DurakGame& game);
+    virtual TGameCommand GenerateCommand(const TDurakGame& game);
 
 protected:
     // Возвращает -1, если не хочет выбирать, и число от 0 до hand.size() иначе
-    virtual int selectFromAvailable(const std::vector<Card>& hand, Suit trump) {
+    virtual int SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) {
         return -1;
     }
 };
 
-struct RandomStrategy: IBotStrategy {
+class TRandomStrategy: public IBotStrategy {
 protected:
-    virtual int selectFromAvailable(const std::vector<Card>& hand, Suit trump) override;
+    int SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) override;
 };
 
-struct SortedStrategy: IBotStrategy {
-    float coeff;
-    SortedStrategy(float coeff)
-        : coeff(coeff) {
-    }
+class TSortedStrategy: public IBotStrategy {
+public:
+    float Coeff;
+    TSortedStrategy(float coeff)
+        : Coeff(coeff) 
+    {}
 
 protected:
-    virtual int selectFromAvailable(const std::vector<Card>& hand, Suit trump) override;
+    int SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) override;
 
 private:
-    static int calculatePriority(const Card& card, Suit trump);
+    static int CalculatePriority(const TCard& card, ESuit trump);
 };
 
 // This should never fail, in theory.
-struct FallbackStrategy: IBotStrategy {
-    virtual GameCommand generateCommand(const DurakGame& game) override;
+struct FallbackStrategy: public IBotStrategy {
+    TGameCommand GenerateCommand(const TDurakGame& game) override;
 };

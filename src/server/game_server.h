@@ -7,11 +7,12 @@
 #include "player_manager.h"
 
 // RAII класс с основной логикой сервера
-struct GameServer {
-    PipeWrapper newPlayerPipe;
-    AcceptHandler acceptHandler;
-    PlayerManager playerManager;
+class TGameServer {
+public:
+    TPipeWrapper NewPlayerPipe;
+    TAcceptHandler AcceptHandler;
+    TPlayerManager PlayerManager;
 
-    GameServer();
-    ~GameServer();
+    TGameServer();
+    ~TGameServer();
 };

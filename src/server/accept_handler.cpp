@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void AcceptHandler::run() {
+void TAcceptHandler::run() {
     while (running) {
         sockaddr_in peer_address;
         socklen_t peer_address_size = sizeof(peer_address);
@@ -32,7 +32,7 @@ void AcceptHandler::run() {
     }
 }
 
-int AcceptHandler::createListenSocket() {
+int TAcceptHandler::createListenSocket() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("Failed to create socket");

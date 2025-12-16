@@ -4,7 +4,7 @@
 
 #include "actor/strategy.h"
 
-std::optional<SomeCommand> parseCommand(const std::string& commandStr) {
+std::optional<TSomeCommand> parseCommand(const std::string& commandStr) {
     std::istringstream iss(commandStr);
     std::string cmd;
     iss >> cmd;
@@ -12,59 +12,59 @@ std::optional<SomeCommand> parseCommand(const std::string& commandStr) {
     if (cmd.empty()) {
         return {};
     }
-    auto it = Command::FIRST_LETTERS.find(cmd[0]);
-    if (it == Command::FIRST_LETTERS.end()) {
+    auto it = TCommand::FIRST_LETTERS.find(cmd[0]);
+    if (it == TCommand::FIRST_LETTERS.end()) {
         try {
             int num = std::stoi(cmd);
-            return std::optional{SelectCommand(num)}; // todo: remove std::optional?
+            return std::optional{TSelectCommand(num)}; // todo: remove std::optional?
         } catch (...) {
         }
         return {};
     }
-    Command::Type type = it->second;
+    TCommand::EType type = it->second;
     const std::string& fullCommand =
-        Command::KNOWN_COMMANDS[static_cast<int>(type)];
+        TCommand::KNOWN_COMMANDS[static_cast<int>(type)];
     if (fullCommand.size() < cmd.size() ||
         fullCommand.substr(0, cmd.size()) != cmd) {
         return {};
     }
 
     switch (type) {
-        case Command::Type::Create: {
+        case TCommand::EType::Create: {
             std::string name;
             size_t maxPlayers;
             if (iss >> name >> maxPlayers) {
-                return std::optional{CreateCommand(name, maxPlayers)};
+                return std::optional{TCreateCommand(name, maxPlayers)};
             }
             return {};
         }
-        case Command::Type::Join: {
+        case TCommand::EType::Join: {
             std::string name;
             if (iss >> name) {
-                return std::optional{JoinCommand(name)};
+                return std::optional{TJoinCommand(name)};
             }
             return {};
         }
-        case Command::Type::List: {
-            return std::optional{ListCommand()};
+        case TCommand::EType::List: {
+            return std::optional{TListCommand()};
         }
-        case Command::Type::Add: {
-            if (auto strat = IBotStrategy::parse(iss)) {
-                return std::optional{AddCommand(std::move(strat))};
+        case TCommand::EType::Add: {
+            if (auto strat = IBotStrategy::Parse(iss)) {
+                return std::optional{TAddCommand(std::move(strat))};
             }
             return {};
         }
-        case Command::Type::Start: {
-            return std::optional{StartCommand()};
+        case TCommand::EType::Start: {
+            return std::optional{TStartCommand()};
         }
-        case Command::Type::Finish: {
-            return std::optional{FinishCommand()};
+        case TCommand::EType::Finish: {
+            return std::optional{TFinishCommand()};
         }
-        case Command::Type::Take: {
-            return std::optional{TakeCommand()};
+        case TCommand::EType::Take: {
+            return std::optional{TTakeCommand()};
         }
-        case Command::Type::End: {
-            return std::optional{EndCommand()};
+        case TCommand::EType::End: {
+            return std::optional{TEndCommand()};
         }
         default:
             return {};

@@ -1,15 +1,15 @@
 #pragma once
 #include <unistd.h>
 
-class PipeWrapper {
+class TPipeWrapper {
     int fd[2];
 
 public:
-    PipeWrapper() {
+    TPipeWrapper() {
         pipe(fd);
     }
 
-    ~PipeWrapper() {
+    ~TPipeWrapper() {
         if (fd[0] >= 0) {
             close(fd[0]);
         }

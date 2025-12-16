@@ -10,52 +10,58 @@
 #include "deck.h"
 
 // Note: values do matter
-enum class DurakState : uint8_t {
+enum class EDurakState : uint8_t {
     AttackerThinks = 0,
     DefenderThinks = 1
 };
 
-struct DurakGame {
-    const std::vector<std::unique_ptr<IActor>>& actors;
-    std::vector<std::vector<Card>> hands;
+class TDurakGame {
+public:
+    const std::vector<std::unique_ptr<IActor>>& Actors;
+    std::vector<std::vector<TCard>> Hands;
 
-    std::vector<bool> isPlaying;
-    std::vector<unsigned> winRating; // the first actor index is the winner, the last one is the loser
-    bool bFinished = false;
+    std::vector<bool> IsPlaying;
+    std::vector<unsigned> WinRating; // the first actor index is the winner, the last one is the loser
+    bool Finished;
 
-    Deck deck;
-    Suit trump;
+    TDeck Deck;
+    ESuit Trump;
 
-    DurakState state = DurakState::AttackerThinks;
-    unsigned attackingActor = 0;
-    std::vector<Card> table;
-    std::optional<Card> attackingCard{};
+    EDurakState State;
+    unsigned AttackingActor;
+    std::vector<TCard> Table;
+    std::optional<TCard> AttackingCard{};
 
-    unsigned getActiveActor() const;
-    unsigned getDefendingActor() const;
-
-    DurakGame(const std::vector<std::unique_ptr<IActor>>& actors)
-        : actors(actors) {
-        auto trumpCard = deck.getBottom();
-        trump = trumpCard.suit;
-        freeFormBroadcast(-1, "Trump card (at the deck bottom): " + trumpCard.toString());
+public:
+    TDurakGame(const std::vector<std::unique_ptr<IActor>>& actors)
+        : Actors(actors) 
+        , Finished(false)
+        , State(EDurakState::AttackerThinks)
+        , AttackingActor(0)
+    {
+        auto trumpCard = Deck.GetBottom();
+        Trump = trumpCard.suit;
+        FreeFormBroadcast(-1, "Trump card (at the deck bottom): " + trumpCard.ToString());
         for (int i = 0; i < actors.size(); i++) {
-            auto cards = deck.deal(6);
-            hands.push_back(cards);
-            actors[i]->tookCards(cards);
-            isPlaying.push_back(true);
+            auto cards = Deck.Deal(6);
+            Hands.push_back(cards);
+            actors[i]->TookCards(cards);
+            IsPlaying.push_back(true);
         }
-        actors[getActiveActor()]->mustAttack();
+        actors[GetActiveActor()]->MustAttack();
     }
 
-    void notifyPlayerLeft(unsigned playerNum);
+    unsigned GetActiveActor() const;
+    unsigned GetDefendingActor() const;
 
-    Result executePlayerGameCommand(unsigned playerNum, GameCommand cmd);
+    void NotifyPlayerLeft(unsigned playerNum);
+
+    TResult ExecutePlayerGameCommand(unsigned playerNum, TGameCommand cmd);
 
 private:
-    Result executeGameCommand(unsigned playerNum, GameCommand cmd);
+    TResult ExecuteGameCommand(unsigned playerNum, TGameCommand cmd);
 
-    void fillHand(unsigned playerNum);
-    void checkWin(unsigned playerNum);
-    void freeFormBroadcast(int excludeNum, const std::string& msg);
+    void FillHand(unsigned playerNum);
+    void CheckWin(unsigned playerNum);
+    void FreeFormBroadcast(int excludeNum, const std::string& msg);
 };

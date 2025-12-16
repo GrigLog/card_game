@@ -2,30 +2,30 @@
 #include "server/durak/deck.h"
 
 TEST(DeckTest, DeckCreation) {
-    Deck deck;
-    EXPECT_EQ(deck.size(), 36); // Стандартная колода для Дурака
+    TDeck deck;
+    EXPECT_EQ(deck.Size(), 36); // Стандартная колода для Дурака
 }
 
 TEST(DeckTest, DealCards) {
-    Deck deck;
+    TDeck deck;
     const int count = 6;
 
-    auto cards = deck.deal(count);
+    auto cards = deck.Deal(count);
     EXPECT_EQ(cards.size(), count);
-    EXPECT_EQ(deck.size(), 36 - count);
+    EXPECT_EQ(deck.Size(), 36 - count);
 }
 
 TEST(DeckTest, DealAllCards) {
-    Deck deck;
-    auto allCards = deck.deal(deck.size());
+    TDeck deck;
+    auto allCards = deck.Deal(deck.Size());
 
     EXPECT_EQ(allCards.size(), 36);
 }
 
 TEST(DeckTest, DealMoreThanAvailable) {
-    Deck deck;
-    auto cards = deck.deal(deck.size() * 2);
+    TDeck deck;
+    auto cards = deck.Deal(deck.Size() * 2);
 
     EXPECT_EQ(cards.size(), 36);
-    EXPECT_EQ(deck.size(), 0);
+    EXPECT_EQ(deck.Size(), 0);
 }

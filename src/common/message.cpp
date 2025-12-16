@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-bool Message::readFromSocket(int socketFd, std::string& data) {
+bool TMessage::ReadFromSocket(int socketFd, std::string& data) {
     // Читаем длину сообщения (4 байта)
     uint32_t length;
     ssize_t bytesRead = recv(socketFd, &length, sizeof(length), MSG_WAITALL);
@@ -41,7 +41,7 @@ bool Message::readFromSocket(int socketFd, std::string& data) {
     return true;
 }
 
-bool Message::writeToSocket(int socketFd, const std::string& data) {
+bool TMessage::WriteToSocket(int socketFd, const std::string& data) {
     if (data.empty() || data.size() > 1024 * 1024) {
         return false;
     }

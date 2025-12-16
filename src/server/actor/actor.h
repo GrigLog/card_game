@@ -8,72 +8,74 @@
 
 #include "strategy.h"
 
-struct Card;
+class TCard;
 namespace Hand {};
 
 struct IActor {
-    virtual bool isPlayer() = 0;
-    virtual bool isOwner() {
+    virtual bool IsPlayer() = 0;
+    virtual bool IsOwner() {
         return false;
     };
-    virtual std::string getName() = 0;
+    virtual std::string GetName() = 0;
 
-    virtual void canDefend(const Card& attackedBy) {
+    virtual void CanDefend(const TCard& attackedBy) {
     }
-    virtual void mustAttack() {
+    virtual void MustAttack() {
     }
-    virtual void canContinueAttack(const Card& wasBeatenBy) {
+    virtual void CanContinueAttack(const TCard& wasBeatenBy) {
     }
-    virtual void tookCards(std::vector<Card> cards) {
+    virtual void TookCards(std::vector<TCard> cards) {
     }
 
-    virtual void freeFormNotify(const std::string& msg) {
+    virtual void FreeFormNotify(const std::string& msg) {
     }
 };
 
-struct Bot: IActor {
-    std::unique_ptr<IBotStrategy> strategy;
-    unsigned roomId;
+struct TBot: IActor {
+    std::unique_ptr<IBotStrategy> Strategy;
+    unsigned RoomId;
 
-    Bot(std::unique_ptr<IBotStrategy> strategy, unsigned roomId)
-        : strategy(std::move(strategy))
-        , roomId(roomId) {
-    }
-    bool isPlayer() {
+    TBot(std::unique_ptr<IBotStrategy> strategy, unsigned roomId)
+        : Strategy(std::move(strategy))
+        , RoomId(roomId) 
+    {}
+
+    bool IsPlayer() {
         return false;
     }
-    std::string getName() override {
-        return "Bot" + std::to_string(roomId);
+    std::string GetName() override {
+        return "Bot" + std::to_string(RoomId);
     }
 };
 
-struct Player: IActor {
+struct TPlayer: IActor {
     // using FCallback = std::function<void(unsigned, const std::string&)>;
-    unsigned id;
-    bool bOwner;
+    unsigned Id;
+    bool Owner;
     // FCallback notifyCallback;
 
-    Player(unsigned id, bool bOwner /*, FCallback&& cb*/)
-        : id(id)
-        , bOwner(bOwner) /*, notifyCallback(cb)*/ {
-    }
-    bool isPlayer() override {
+    TPlayer(unsigned id, bool bOwner /*, FCallback&& cb*/)
+        : Id(id)
+        , Owner(bOwner) /*, notifyCallback(cb)*/ 
+    {}
+
+    bool IsPlayer() override {
         return true;
     }
-    bool isOwner() override {
-        return bOwner;
+    bool IsOwner() override {
+        return Owner;
     }
-    std::string getName() override {
-        return "Player" + std::to_string(id);
+    std::string GetName() override {
+        return "Player" + std::to_string(Id);
     }
 
-    void freeFormNotify(const std::string& msg) override;
+    void FreeFormNotify(const std::string& msg) override;
 
-    void canDefend(const Card& attackedBy) override;
+    void CanDefend(const TCard& attackedBy) override;
 
-    void mustAttack() override {
-        freeFormNotify("It's your turn to attack!");
+    void MustAttack() override {
+        FreeFormNotify("It's your turn to attack!");
     }
-    void canContinueAttack(const Card& wasBeatenBy) override;
-    void tookCards(std::vector<Card> cards) override;
+    void CanContinueAttack(const TCard& wasBeatenBy) override;
+    void TookCards(std::vector<TCard> cards) override;
 };

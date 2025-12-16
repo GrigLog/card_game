@@ -5,11 +5,11 @@
 
 #include "../durak/durak.h"
 
-std::unique_ptr<IBotStrategy> IBotStrategy::parse(std::istream& iss) {
+std::unique_ptr<IBotStrategy> IBotStrategy::Parse(std::istream& iss) {
     std::string name;
     if (iss >> name) {
         if (name == "random") {
-            return std::make_unique<RandomStrategy>();
+            return std::make_unique<TRandomStrategy>();
         } else if (name == "sorted") {
             float coeff;
             if (iss >> coeff) {
@@ -19,56 +19,56 @@ std::unique_ptr<IBotStrategy> IBotStrategy::parse(std::istream& iss) {
                 if (coeff > 1) {
                     coeff = 1;
                 }
-                return std::make_unique<SortedStrategy>(coeff);
+                return std::make_unique<TSortedStrategy>(coeff);
             }
         }
     }
     return nullptr;
 }
 
-GameCommand IBotStrategy::generateCommand(const DurakGame& game) {
-    const auto& hand = game.hands[game.getActiveActor()];
-    if (game.state == DurakState::AttackerThinks) {
-        if (game.table.empty()) {
-            return SelectCommand(selectFromAvailable(hand, game.trump) + 1);
+TGameCommand IBotStrategy::GenerateCommand(const TDurakGame& game) {
+    const auto& hand = game.Hands[game.GetActiveActor()];
+    if (game.State == EDurakState::AttackerThinks) {
+        if (game.Table.empty()) {
+            return TSelectCommand(SelectFromAvailable(hand, game.Trump) + 1);
         } else {
-            std::vector<Card> filteredHand;
-            for (const Card& c : hand) {
-                if (c.canAttack(game.table)) {
+            std::vector<TCard> filteredHand;
+            for (const TCard& c : hand) {
+                if (c.CanAttack(game.Table)) {
                     filteredHand.push_back(c);
                 }
             }
-            int idx = selectFromAvailable(filteredHand, game.trump);
+            int idx = SelectFromAvailable(filteredHand, game.Trump);
             if (idx == -1) {
-                return EndCommand();
+                return TEndCommand();
             }
             int realIdx = std::find(hand.begin(), hand.end(), filteredHand[idx]) - hand.begin();
-            return SelectCommand(realIdx + 1);
+            return TSelectCommand(realIdx + 1);
         }
     } else {
-        std::vector<Card> filteredHand;
-        for (const Card& c : hand) {
-            if (c.beats(game.attackingCard.value(), game.trump)) {
+        std::vector<TCard> filteredHand;
+        for (const TCard& c : hand) {
+            if (c.Beats(game.AttackingCard.value(), game.Trump)) {
                 filteredHand.push_back(c);
             }
         }
-        int idx = selectFromAvailable(filteredHand, game.trump);
+        int idx = SelectFromAvailable(filteredHand, game.Trump);
         if (idx == -1) {
-            return TakeCommand();
+            return TTakeCommand();
         }
         int realIdx = std::find(hand.begin(), hand.end(), filteredHand[idx]) - hand.begin();
-        return SelectCommand(realIdx + 1);
+        return TSelectCommand(realIdx + 1);
     }
 }
 
-int RandomStrategy::selectFromAvailable(const std::vector<Card>& hand, Suit trump) {
+int TRandomStrategy::SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) {
     if (hand.empty()) {
         return -1;
     }
     return 0; // Карты ж не отсортированы. Значит, брать первую - все равно, что случайную :)
 }
 
-int SortedStrategy::selectFromAvailable(const std::vector<Card>& hand, Suit trump) {
+int TSortedStrategy::SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) {
     if (hand.empty()) {
         return -1;
     }
@@ -77,8 +77,8 @@ int SortedStrategy::selectFromAvailable(const std::vector<Card>& hand, Suit trum
     std::vector<std::pair<int, int>> cardPriorities;
 
     for (size_t i = 0; i < hand.size(); ++i) {
-        const Card& card = hand[i];
-        int priority = calculatePriority(card, trump);
+        const TCard& card = hand[i];
+        int priority = CalculatePriority(card, trump);
         cardPriorities.emplace_back(i, priority);
     }
 
@@ -89,11 +89,11 @@ int SortedStrategy::selectFromAvailable(const std::vector<Card>& hand, Suit trum
               });
 
     // Возвращаем индекс подходящей по силе карты в исходном векторе
-    int idx = cardPriorities.size() * coeff;
+    int idx = cardPriorities.size() * Coeff;
     return cardPriorities[idx].first;
 }
 
-int SortedStrategy::calculatePriority(const Card& card, Suit trump) {
+int TSortedStrategy::CalculatePriority(const TCard& card, ESuit trump) {
     bool isTrump = (card.suit == trump);
     int basePriority = static_cast<int>(card.rank);
 
@@ -109,14 +109,14 @@ int SortedStrategy::calculatePriority(const Card& card, Suit trump) {
     }
 }
 
-GameCommand FallbackStrategy::generateCommand(const DurakGame& game) {
-    if (game.state == DurakState::AttackerThinks) {
-        if (game.table.empty()) {
-            return SelectCommand(1);
+TGameCommand FallbackStrategy::GenerateCommand(const TDurakGame& game) {
+    if (game.State == EDurakState::AttackerThinks) {
+        if (game.Table.empty()) {
+            return TSelectCommand(1);
         } else {
-            return EndCommand();
+            return TEndCommand();
         }
     } else {
-        return TakeCommand();
+        return TTakeCommand();
     }
 }

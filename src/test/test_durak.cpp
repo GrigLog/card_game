@@ -8,65 +8,65 @@
 
 TEST(DurakTest, PlayerAttackPlayerTake) {
     std::vector<std::unique_ptr<IActor>> actors;
-    actors.emplace_back(new Player{0, true});
-    actors.emplace_back(new Player{1, false});
+    actors.emplace_back(new TPlayer{0, true});
+    actors.emplace_back(new TPlayer{1, false});
     // broadcasts won't fail because PlayerManager has a safety check in sendToPlayer
-    DurakGame game(actors);
+    TDurakGame game(actors);
 
-    game.executePlayerGameCommand(0, SelectCommand(1));
-    EXPECT_EQ(game.state, DurakState::DefenderThinks);
-    EXPECT_TRUE(game.attackingCard.has_value());
-    game.executePlayerGameCommand(1, TakeCommand());
-    EXPECT_EQ(game.hands[0].size(), 6);
-    EXPECT_EQ(game.hands[1].size(), 7);
-    EXPECT_EQ(game.attackingActor, 0);
-    EXPECT_EQ(game.state, DurakState::AttackerThinks);
-    EXPECT_FALSE(game.attackingCard.has_value());
-    EXPECT_EQ(game.bFinished, false);
+    game.ExecutePlayerGameCommand(0, TSelectCommand(1));
+    EXPECT_EQ(game.State, EDurakState::DefenderThinks);
+    EXPECT_TRUE(game.AttackingCard.has_value());
+    game.ExecutePlayerGameCommand(1, TTakeCommand());
+    EXPECT_EQ(game.Hands[0].size(), 6);
+    EXPECT_EQ(game.Hands[1].size(), 7);
+    EXPECT_EQ(game.AttackingActor, 0);
+    EXPECT_EQ(game.State, EDurakState::AttackerThinks);
+    EXPECT_FALSE(game.AttackingCard.has_value());
+    EXPECT_EQ(game.Finished, false);
 }
 
 TEST(DurakTest, PlayerAttackPlayerDefend) {
     std::vector<std::unique_ptr<IActor>> actors;
-    actors.emplace_back(new Player{0, true});
-    actors.emplace_back(new Player{1, false});
-    DurakGame game(actors);
+    actors.emplace_back(new TPlayer{0, true});
+    actors.emplace_back(new TPlayer{1, false});
+    TDurakGame game(actors);
 
-    game.hands[0][5] = Card{Suit::Hearts, Rank::Six};
-    game.hands[1][5] = Card{Suit::Hearts, Rank::Seven};
-    game.executePlayerGameCommand(0, SelectCommand(6));
-    game.executePlayerGameCommand(1, SelectCommand(6));
-    EXPECT_EQ(game.attackingActor, 0);
-    EXPECT_EQ(game.state, DurakState::AttackerThinks);
-    EXPECT_EQ(game.table.size(), 2);
-    EXPECT_FALSE(game.attackingCard.has_value());
-    game.executePlayerGameCommand(0, EndCommand());
-    EXPECT_EQ(game.hands[0].size(), 6);
-    EXPECT_EQ(game.hands[1].size(), 6);
-    EXPECT_EQ(game.attackingActor, 1);
-    EXPECT_EQ(game.state, DurakState::AttackerThinks);
+    game.Hands[0][5] = TCard{ESuit::Hearts, ERank::Six};
+    game.Hands[1][5] = TCard{ESuit::Hearts, ERank::Seven};
+    game.ExecutePlayerGameCommand(0, TSelectCommand(6));
+    game.ExecutePlayerGameCommand(1, TSelectCommand(6));
+    EXPECT_EQ(game.AttackingActor, 0);
+    EXPECT_EQ(game.State, EDurakState::AttackerThinks);
+    EXPECT_EQ(game.Table.size(), 2);
+    EXPECT_FALSE(game.AttackingCard.has_value());
+    game.ExecutePlayerGameCommand(0, TEndCommand());
+    EXPECT_EQ(game.Hands[0].size(), 6);
+    EXPECT_EQ(game.Hands[1].size(), 6);
+    EXPECT_EQ(game.AttackingActor, 1);
+    EXPECT_EQ(game.State, EDurakState::AttackerThinks);
 }
 
 TEST(DurakTest, PlayerAttackBotDefend) {
     std::vector<std::unique_ptr<IActor>> actors;
-    actors.emplace_back(new Player{0, true});
-    actors.emplace_back(new Bot{std::make_unique<SortedStrategy>(0.0), 0});
-    DurakGame game(actors);
+    actors.emplace_back(new TPlayer{0, true});
+    actors.emplace_back(new TBot{std::make_unique<TSortedStrategy>(0.0), 0});
+    TDurakGame game(actors);
 
-    game.trump = Suit::Diamonds;
-    game.hands[0][0] = Card{Suit::Diamonds, Rank::Ace};
-    game.hands[0][5] = Card{Suit::Hearts, Rank::Ace};
-    game.hands[1][5] = Card{Suit::Diamonds, Rank::Six};
-    game.executePlayerGameCommand(0, SelectCommand(6));
+    game.Trump = ESuit::Diamonds;
+    game.Hands[0][0] = TCard{ESuit::Diamonds, ERank::Ace};
+    game.Hands[0][5] = TCard{ESuit::Hearts, ERank::Ace};
+    game.Hands[1][5] = TCard{ESuit::Diamonds, ERank::Six};
+    game.ExecutePlayerGameCommand(0, TSelectCommand(6));
     // bot calls executeGameCommand(), can defend
 
-    EXPECT_EQ(game.attackingActor, 0);
-    EXPECT_EQ(game.state, DurakState::AttackerThinks);
-    EXPECT_EQ(game.table.size(), 2);
-    game.executePlayerGameCommand(0, SelectCommand(1));
+    EXPECT_EQ(game.AttackingActor, 0);
+    EXPECT_EQ(game.State, EDurakState::AttackerThinks);
+    EXPECT_EQ(game.Table.size(), 2);
+    game.ExecutePlayerGameCommand(0, TSelectCommand(1));
     // bot calls executeGameCommand(), has to take cards
 
-    EXPECT_EQ(game.hands[0].size(), 6);
-    EXPECT_EQ(game.hands[1].size(), 8);
-    EXPECT_EQ(game.attackingActor, 0);
-    EXPECT_EQ(game.state, DurakState::AttackerThinks);
+    EXPECT_EQ(game.Hands[0].size(), 6);
+    EXPECT_EQ(game.Hands[1].size(), 8);
+    EXPECT_EQ(game.AttackingActor, 0);
+    EXPECT_EQ(game.State, EDurakState::AttackerThinks);
 }

@@ -6,8 +6,8 @@ constexpr unsigned short PORT = 6969;
 
 // Utility to allow overloading lambdas for use in std::visit
 template <class... Ts>
-struct VisitOverloadUtility: Ts... {
+struct TVisitOverloadUtility: Ts... {
     using Ts::operator()...;
 };
 
-using Result = std::pair<bool, std::string>;
+using TResult = std::pair<bool, std::string>;

@@ -13,7 +13,7 @@
 #include "../common/common.h"
 
 // Обработчик приема новых соединений
-class AcceptHandler {
+class TAcceptHandler {
 private:
     // BlockingQueue<int> newSockets;
     int listenSocketFd = -1;
@@ -23,14 +23,14 @@ private:
     std::thread runThread;
 
 public:
-    AcceptHandler(int newPlayerPipeFd)
+    TAcceptHandler(int newPlayerPipeFd)
         : newPlayerPipeFd(newPlayerPipeFd) {
         listenSocketFd = createListenSocket();
         // std::cout << "listening socket = " << listenSocketFd << std::endl;
-        runThread = std::thread(&AcceptHandler::run, this);
+        runThread = std::thread(&TAcceptHandler::run, this);
     }
 
-    ~AcceptHandler() {
+    ~TAcceptHandler() {
         running = false;
         std::cout << "AcceptHandler is stopping..." << std::endl;
         if (listenSocketFd >= 0) {

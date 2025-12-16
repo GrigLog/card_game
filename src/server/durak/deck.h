@@ -5,27 +5,27 @@
 
 #include "card.h"
 
-class Deck {
-    std::vector<Card> cards;
-    std::mt19937 rng;
+class TDeck {
+    std::vector<TCard> Cards;
+    std::mt19937 Rng;
 
 public:
-    Deck();
+    TDeck();
 
-    Card draw();
+    TCard draw();
 
-    bool empty() const {
-        return cards.empty();
+    bool IsEmpty() const {
+        return Cards.empty();
     }
 
     // Количество оставшихся карт
-    size_t size() const {
-        return cards.size();
+    size_t Size() const {
+        return Cards.size();
     }
 
     // Раздать карты (возвращает вектор карт)
-    std::vector<Card> deal(size_t count);
+    std::vector<TCard> Deal(size_t count);
 
     // Показать нижнюю карту (будет козырной)
-    Card getBottom() const;
+    TCard GetBottom() const;
 };

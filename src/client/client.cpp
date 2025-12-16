@@ -13,16 +13,16 @@ using namespace std;
 
 int main(int argc, char** argv) {
     cout << "Client is starting..." << endl;
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
+    int sockFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockFd == -1) {
         perror("Failed to create a socket");
         exit(1);
     }
-    in_addr_t server_address = INADDR_LOOPBACK; // localhost for now
-    sockaddr_in address{AF_INET, htons(PORT), htonl(server_address)};
-    if (connect(sockfd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) ==
+    in_addr_t serverAddress = INADDR_LOOPBACK; // localhost for now
+    sockaddr_in address{AF_INET, htons(PORT), htonl(serverAddress)};
+    if (connect(sockFd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) ==
         -1) {
-        perror(format("Failed to connect to {}:{}", server_address, PORT).c_str());
+        perror(format("Failed to connect to {}:{}", serverAddress, PORT).c_str());
         exit(1);
     }
     cout << "Connected to game server." << endl;
@@ -30,29 +30,29 @@ int main(int argc, char** argv) {
     // Настраиваем poll для двух файловых дескрипторов:
     // 1. STDIN_FILENO (0) - консольный ввод
     // 2. sockfd - сокет для сообщений от сервера
-    pollfd fds[2] = {{STDIN_FILENO, POLLIN, 0}, {sockfd, POLLIN, 0}};
+    pollfd fds[2] = {{STDIN_FILENO, POLLIN, 0}, {sockFd, POLLIN, 0}};
 
-    string input_line;
+    string inputLine;
     bool running = true;
 
     while (running) {
-        int poll_count = poll(fds, 2, -1);
-        if (poll_count == -1) {
+        int pollCount = poll(fds, 2, -1);
+        if (pollCount == -1) {
             perror("poll failed");
             break;
         }
 
         // 1. Проверяем, есть ли ввод с консоли (stdin)
         if (fds[0].revents & POLLIN) {
-            if (!getline(cin, input_line)) {
+            if (!getline(cin, inputLine)) {
                 // EOF (Ctrl+D) или ошибка чтения
                 cout << "End of input. Closing connection." << endl;
                 break;
             }
 
-            if (!input_line.empty()) {
+            if (!inputLine.empty()) {
                 // Отправляем команду на сервер
-                if (!Message::writeToSocket(sockfd, input_line)) {
+                if (!TMessage::WriteToSocket(sockFd, inputLine)) {
                     cerr << "Failed to send command" << endl;
                     break;
                 }
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         // 2. Проверяем, есть ли данные от сервера
         if (fds[1].revents & POLLIN) {
             string response;
-            if (!Message::readFromSocket(sockfd, response)) {
+            if (!TMessage::ReadFromSocket(sockFd, response)) {
                 cerr << "Connection closed or error reading from server" << endl;
                 break;
             }
@@ -80,6 +80,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    close(sockfd);
+    close(sockFd);
     return 0;
 }

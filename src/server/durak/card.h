@@ -4,14 +4,14 @@
 #include <vector>
 #include <cstdint>
 
-enum class Suit : uint8_t {
+enum class ESuit : uint8_t {
     Spades = 0,   // Пики
     Clubs = 1,    // Трефы
     Diamonds = 2, // Бубны
     Hearts = 3    // Червы
 };
 
-enum class Rank : uint8_t {
+enum class ERank : uint8_t {
     Six = 6,
     Seven = 7,
     Eight = 8,
@@ -23,34 +23,30 @@ enum class Rank : uint8_t {
     Ace = 14    // Туз
 };
 
-struct Card {
-    Suit suit;
-    Rank rank;
+class TCard {
+public:
+    ESuit suit;
+    ERank rank;
 
-    Card(Suit suit, Rank rank)
+public:
+    TCard(ESuit suit, ERank rank)
         : suit(suit)
-        , rank(rank) {
-    }
+        , rank(rank) 
+    {}
 
-    // Проверка, бьет ли эта карта другую (с учетом козырной масти)
-    bool beats(const Card& other, Suit trump) const;
-
-    // Проверка, можно ли атаковать этой картой (совпадает ли ранг с уже выложенными)
-    bool canAttack(const std::vector<Card>& table) const;
-
-    // Сериализация в строку (формат: "S6" для пики 6, "HA" для червового туза)
-    std::string toString() const;
-
-    // Десериализация из строки
-    static Card fromString(const std::string& str);
-
-    bool operator==(const Card& other) const {
+    bool operator==(const TCard& other) const {
         return suit == other.suit && rank == other.rank;
     }
 
-    // bool operator<(const Card& other) const {
-    //     if (rank != other.rank)
-    //         return rank < other.rank;
-    //     return suit < other.suit;
-    // }
+    // Проверка, бьет ли эта карта другую (с учетом козырной масти)
+    bool Beats(const TCard& other, ESuit trump) const;
+
+    // Проверка, можно ли атаковать этой картой (совпадает ли ранг с уже выложенными)
+    bool CanAttack(const std::vector<TCard>& table) const;
+
+    // Сериализация в строку (формат: "S6" для пики 6, "HA" для червового туза)
+    std::string ToString() const;
+
+    // Десериализация из строки
+    static TCard FromString(const std::string& str);
 };

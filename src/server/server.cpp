@@ -6,23 +6,22 @@
 
 #include "game_server.h"
 
-std::atomic<bool> g_running{true};
+volatile bool running{true}; 
 
 void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        g_running = false;
+        running = false;
     }
 }
 
 int main(int argc, char** argv) {
     std::cout << "Server is starting..." << std::endl;
 
-    // Устанавливаем обработчик сигналов
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
 
     try {
-        GameServer server;
+        TGameServer server;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

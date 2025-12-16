@@ -9,36 +9,36 @@
 
 struct IBotStrategy;
 
-struct ListCommand {};
-struct CreateCommand {
-    std::string name;
-    size_t maxPlayers;
+struct TListCommand {};
+struct TCreateCommand {
+    std::string Name;
+    size_t MaxPlayers;
 };
-struct JoinCommand {
-    std::string name;
+struct TJoinCommand {
+    std::string Name;
 };
 
-struct AddCommand {
-    std::unique_ptr<IBotStrategy> strategy;
+struct TAddCommand {
+    std::unique_ptr<IBotStrategy> Strategy;
 };
-struct StartCommand {};
-struct FinishCommand {};
+struct TStartCommand {};
+struct TFinishCommand {};
 
-struct SelectCommand {
-    unsigned cardNum;
+struct TSelectCommand {
+    unsigned CardNum;
 };
-struct TakeCommand {};
-struct EndCommand {};
+struct TTakeCommand {};
+struct TEndCommand {};
 
-using LobbyCommand =
-    std::variant<ListCommand, CreateCommand, JoinCommand, FinishCommand>;
-using RoomCommand = std::variant<AddCommand, StartCommand>;
-using GameCommand = std::variant<SelectCommand, TakeCommand, EndCommand>;
+using TLobbyCommand =
+    std::variant<TListCommand, TCreateCommand, TJoinCommand, TFinishCommand>;
+using TRoomCommand = std::variant<TAddCommand, TStartCommand>;
+using TGameCommand = std::variant<TSelectCommand, TTakeCommand, TEndCommand>;
 
-using SomeCommand = std::variant<LobbyCommand, RoomCommand, GameCommand>;
+using TSomeCommand = std::variant<TLobbyCommand, TRoomCommand, TGameCommand>;
 
-struct Command {
-    enum class Type : uint8_t {
+struct TCommand {
+    enum class EType : uint8_t {
         List = 0,
         Create,
         Join,
@@ -57,8 +57,8 @@ struct Command {
         "finish", "select", "take", "end"};
     // NOTE: start and select have the same first letters, but "select" is not
     // actually typed
-    inline static const std::unordered_map<char, Type> FIRST_LETTERS = {
-        {'l', Type::List}, {'c', Type::Create}, {'j', Type::Join}, {'a', Type::Add}, {'s', Type::Start}, {'f', Type::Finish}, {'t', Type::Take}, {'e', Type::End}};
+    inline static const std::unordered_map<char, EType> FIRST_LETTERS = {
+        {'l', EType::List}, {'c', EType::Create}, {'j', EType::Join}, {'a', EType::Add}, {'s', EType::Start}, {'f', EType::Finish}, {'t', EType::Take}, {'e', EType::End}};
 
     inline static const std::string LOBBY_COMMANDS_STR =
         "list, create <room_name> <max_players>, join <room_name>";
@@ -70,4 +70,4 @@ struct Command {
 
 // Парсинг команды из строки
 // Возвращает unique_ptr с Command, или nullptr если команда не распознана
-std::optional<SomeCommand> parseCommand(const std::string& commandStr);
+std::optional<TSomeCommand> parseCommand(const std::string& commandStr);

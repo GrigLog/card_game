@@ -9,14 +9,15 @@
 #include <thread>
 #include <unistd.h>
 
-GameServer::GameServer()
-    : acceptHandler(newPlayerPipe.getWriteFd())
-    , playerManager(newPlayerPipe.getReadFd()) {
+TGameServer::TGameServer()
+    : AcceptHandler(NewPlayerPipe.getWriteFd())
+    , PlayerManager(NewPlayerPipe.getReadFd())
+{
     std::cout << "Game server started. Type anything to stop it." << std::endl;
     std::string input;
     std::cin >> input;
 }
 
-GameServer::~GameServer() {
+TGameServer::~TGameServer() {
     std::cout << "Stopping game server..." << std::endl;
 }

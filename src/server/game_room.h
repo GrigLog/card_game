@@ -15,52 +15,51 @@
 #include "durak/durak.h"
 
 // Игровая комната - принимает команды игроков и как-то на них реагирует.
-// Не имеет своего потока (кроме, может, таймаута?)
-class GameRoom {
+// Не имеет своего потока
+class TGameRoom {
 public:
-    const std::string name;
-    const unsigned ownerId;
-    const size_t maxPlayers;
+    const std::string Name;
+    const unsigned OwnerId;
+    const size_t MaxPlayers;
 
-    unsigned nextBotId = 0;
-    bool bStarted = false;
-    std::optional<DurakGame> gameOpt{};
+    unsigned NextBotId = 0;
+    bool Started = false;
+    std::optional<TDurakGame> GameOpt{};
 
-    std::vector<std::unique_ptr<IActor>> actors;
-    std::unordered_map<unsigned, unsigned> playerIdToActorNum;
+    std::vector<std::unique_ptr<IActor>> Actors;
+    std::unordered_map<unsigned, unsigned> PlayerIdToActorNum;
 
     // NOTE: should be refreshed from time to time to remove null pointers
-    inline static std::unordered_map<std::string, std::weak_ptr<GameRoom>>
-        allRooms;
+    inline static std::unordered_map<std::string, std::weak_ptr<TGameRoom>>
+        AllRooms;
 
 public:
-    static std::shared_ptr<GameRoom> make(const std::string& name,
+    // I can't declare it as private but please don't use it
+    TGameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers);
+
+    ~TGameRoom() {
+        AllRooms.erase(Name);
+        std::cout << "Room '" << Name << "' was deleted." << std::endl;
+    }
+
+    static std::shared_ptr<TGameRoom> make(const std::string& name,
                                           uint32_t ownerId, size_t maxPlayers) {
-        auto res = std::make_shared<GameRoom>(name, ownerId, maxPlayers);
-        allRooms[name] = std::weak_ptr(res);
+        auto res = std::make_shared<TGameRoom>(name, ownerId, maxPlayers);
+        AllRooms[name] = std::weak_ptr(res);
         return res;
     }
-    // I can't declare it as private but please don't use it
-    GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers);
+    
+    static std::vector<const TGameRoom*> GetAllRooms();
 
-    static std::vector<const GameRoom*> getAllRooms();
+    bool AddPlayer(unsigned playerId);
+    bool AddBot(std::unique_ptr<IBotStrategy>&& strategy);
 
-    bool addPlayer(unsigned playerId);
-    bool addBot(std::unique_ptr<IBotStrategy>&& strategy);
+    bool IsFull() const;
 
-    bool isFull() const;
+    void NotifyPlayerLeft(unsigned playerId);
 
-    void notifyPlayerLeft(unsigned playerId);
+    void Start();
 
-    void start();
-
-    std::string handleCommand(unsigned playerId, SomeCommand cmd);
-    std::string executeRoomCommand(unsigned playerId, RoomCommand cmd);
-
-    ~GameRoom() {
-        allRooms.erase(name);
-        std::cout << "Room '" << name << "' was deleted." << std::endl;
-    }
-
-private:
+    std::string HandleCommand(unsigned playerId, TSomeCommand cmd);
+    std::string ExecuteRoomCommand(unsigned playerId, TRoomCommand cmd);
 };

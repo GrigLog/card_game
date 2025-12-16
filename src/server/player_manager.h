@@ -15,28 +15,28 @@
 #include "command.h"
 #include "game_room.h"
 
-class PlayerManager {
+class TPlayerManager {
     inline static std::unordered_map<unsigned, int>
-        players; // todo: singleton, idk
-    std::unordered_map<unsigned, std::shared_ptr<GameRoom>> playerToRoom;
+        Players; // todo: singleton, idk
+    std::unordered_map<unsigned, std::shared_ptr<TGameRoom>> PlayerRooms;
 
-    int newPlayerPipeFd = -1;
-    int nextPlayerId = 0;
+    int NewPlayerPipeFd;
+    int NextPlayerId;
 
-    std::thread runThread;
-    volatile bool running = true;
+    std::thread RunThread;
+    volatile bool Running;
 
 public:
-    PlayerManager(int newPlayerPipeFd);
-    ~PlayerManager();
+    TPlayerManager(int newPlayerPipeFd);
+    ~TPlayerManager();
 
-    static void sendToPlayer(uint32_t playerId, const std::string& response);
+    static void SendToPlayer(uint32_t playerId, const std::string& response);
 
-    void destroyRoom(std::shared_ptr<GameRoom> room, const std::string& msg);
+    void DestroyRoom(std::shared_ptr<TGameRoom> room, const std::string& msg);
 
     // Обработка команды от игрока
-    std::string handleCommand(uint32_t playerId, SomeCommand cmd);
-    std::string executeLobbyCommand(unsigned playerId, LobbyCommand cmd);
+    std::string HandleCommand(uint32_t playerId, TSomeCommand cmd);
+    std::string ExecuteLobbyCommand(unsigned playerId, TLobbyCommand cmd);
 
 private:
     void run();

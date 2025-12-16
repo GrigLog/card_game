@@ -6,107 +6,107 @@
 #include "hand.h"
 #include "../player_manager.h"
 
-unsigned DurakGame::getActiveActor() const {
-    return state == DurakState::AttackerThinks ? attackingActor : getDefendingActor();
+unsigned TDurakGame::GetActiveActor() const {
+    return State == EDurakState::AttackerThinks ? AttackingActor : GetDefendingActor();
 }
 
-unsigned DurakGame::getDefendingActor() const {
-    int i = attackingActor;
+unsigned TDurakGame::GetDefendingActor() const {
+    int i = AttackingActor;
     do {
-        i = (i + 1) % actors.size();
-    } while (i != attackingActor && !isPlaying[i]);
+        i = (i + 1) % Actors.size();
+    } while (i != AttackingActor && !IsPlaying[i]);
     return i;
 }
 
-void DurakGame::notifyPlayerLeft(unsigned playerNum) {
+void TDurakGame::NotifyPlayerLeft(unsigned playerNum) {
     // todo: replace with a bot
-    isPlaying[playerNum] = false;
-    int defendingActor = getDefendingActor();
-    if (playerNum == attackingActor) {
-        if (state == DurakState::AttackerThinks) {
-            executeGameCommand(attackingActor, EndCommand());
+    IsPlaying[playerNum] = false;
+    int defendingActor = GetDefendingActor();
+    if (playerNum == AttackingActor) {
+        if (State == EDurakState::AttackerThinks) {
+            ExecuteGameCommand(AttackingActor, TEndCommand());
         } else {
-            executeGameCommand(defendingActor, TakeCommand()); // I'm sorry
+            ExecuteGameCommand(defendingActor, TTakeCommand()); // I'm sorry
         }
     } else if (playerNum == defendingActor) {
-        if (state == DurakState::AttackerThinks) {
-            executeGameCommand(attackingActor, EndCommand()); // I'm sorry
+        if (State == EDurakState::AttackerThinks) {
+            ExecuteGameCommand(AttackingActor, TEndCommand()); // I'm sorry
         } else {
-            executeGameCommand(defendingActor, TakeCommand());
+            ExecuteGameCommand(defendingActor, TTakeCommand());
         }
     }
-    hands.erase(hands.begin() + playerNum);
-    isPlaying.erase(isPlaying.begin() + playerNum);
+    Hands.erase(Hands.begin() + playerNum);
+    IsPlaying.erase(IsPlaying.begin() + playerNum);
 }
 
-Result DurakGame::executePlayerGameCommand(unsigned playerNum, GameCommand cmd) {
-    if (bFinished) {
-        freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
+TResult TDurakGame::ExecutePlayerGameCommand(unsigned playerNum, TGameCommand cmd) {
+    if (Finished) {
+        FreeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
     }
-    auto res = executeGameCommand(playerNum, cmd);
-    while (!bFinished && !actors[getActiveActor()]->isPlayer()) {
-        if (auto bot = dynamic_cast<Bot*>(actors[getActiveActor()].get())) {
-            GameCommand cmd = bot->strategy->generateCommand(*this);
-            Result r = executeGameCommand(getActiveActor(), cmd);
+    auto res = ExecuteGameCommand(playerNum, cmd);
+    while (!Finished && !Actors[GetActiveActor()]->IsPlayer()) {
+        if (auto bot = dynamic_cast<TBot*>(Actors[GetActiveActor()].get())) {
+            TGameCommand cmd = bot->Strategy->GenerateCommand(*this);
+            TResult r = ExecuteGameCommand(GetActiveActor(), cmd);
             if (!r.first) {
-                cmd = FallbackStrategy{}.generateCommand(*this);
-                r = executeGameCommand(getActiveActor(), cmd);
+                cmd = FallbackStrategy{}.GenerateCommand(*this);
+                r = ExecuteGameCommand(GetActiveActor(), cmd);
                 if (!r.first) {
                     std::cerr << "This bot is hardstuck" << std::endl;
-                    bFinished = true;
+                    Finished = true;
                 }
             }
         } else {
             std::cerr << "Something is terribly wrong with this bot" << std::endl;
-            bFinished = true;
+            Finished = true;
         }
     }
-    if (actors.size() == 1 || attackingActor == getDefendingActor()) {
-        freeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
-        bFinished = true;
+    if (Actors.size() == 1 || AttackingActor == GetDefendingActor()) {
+        FreeFormBroadcast(-1, "Game finished! Wait for the owner to close the room.");
+        Finished = true;
     } else {
-        actors[getActiveActor()]->freeFormNotify("It's your turn to " +
-                                                 std::string(state == DurakState::AttackerThinks ? "attack" : "defend") + "\n" +
-                                                 "Your hand: " + Hand::toString(hands[getActiveActor()]));
+        Actors[GetActiveActor()]->FreeFormNotify("It's your turn to " +
+                                                 std::string(State == EDurakState::AttackerThinks ? "attack" : "defend") + "\n" +
+                                                 "Your hand: " + Hand::ToString(Hands[GetActiveActor()]));
     }
     return res;
 }
 
-Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
-    unsigned active = getActiveActor();
+TResult TDurakGame::ExecuteGameCommand(unsigned playerNum, TGameCommand cmd) {
+    unsigned active = GetActiveActor();
     if (playerNum != active) {
-        return {false, "It's not your turn yet. Wait for " + actors[active]->getName() + " to " +
-                           (state == DurakState::AttackerThinks ? "attack" : "defend")};
+        return {false, "It's not your turn yet. Wait for " + Actors[active]->GetName() + " to " +
+                           (State == EDurakState::AttackerThinks ? "attack" : "defend")};
     }
-    std::vector<Card>& hand = hands[active];
+    std::vector<TCard>& hand = Hands[active];
     auto res = std::visit(
-        VisitOverloadUtility{
-            [&](SelectCommand c) -> Result {
-                if (c.cardNum < 1 || c.cardNum > hand.size()) {
+        TVisitOverloadUtility{
+            [&](TSelectCommand c) -> TResult {
+                if (c.CardNum < 1 || c.CardNum > hand.size()) {
                     return {false, "Card num must be no less than 1 and no bigger than your hand size"};
                 }
-                int trueNum = c.cardNum - 1;
-                Card selCard = hand[trueNum];
-                if (state == DurakState::AttackerThinks) {
-                    if (table.empty() || selCard.canAttack(table)) {
-                        attackingCard = selCard;
-                        table.push_back(selCard);
+                int trueNum = c.CardNum - 1;
+                TCard selCard = hand[trueNum];
+                if (State == EDurakState::AttackerThinks) {
+                    if (Table.empty() || selCard.CanAttack(Table)) {
+                        AttackingCard = selCard;
+                        Table.push_back(selCard);
                         hand.erase(hand.begin() + trueNum);
-                        freeFormBroadcast(active, "attacked with " + selCard.toString());
-                        checkWin(active);
-                        state = DurakState::DefenderThinks;
+                        FreeFormBroadcast(active, "attacked with " + selCard.ToString());
+                        CheckWin(active);
+                        State = EDurakState::DefenderThinks;
                         return {true, ""};
-                    } else if (!table.empty()) {
+                    } else if (!Table.empty()) {
                         return {false, "Can't add this card"};
                     }
                 } else {
-                    if (selCard.beats(attackingCard.value(), trump)) {
-                        attackingCard = {};
-                        table.push_back(selCard);
+                    if (selCard.Beats(AttackingCard.value(), Trump)) {
+                        AttackingCard = {};
+                        Table.push_back(selCard);
                         hand.erase(hand.begin() + trueNum);
-                        freeFormBroadcast(active, "defended with " + selCard.toString());
-                        checkWin(active);
-                        state = DurakState::AttackerThinks;
+                        FreeFormBroadcast(active, "defended with " + selCard.ToString());
+                        CheckWin(active);
+                        State = EDurakState::AttackerThinks;
                         return {true, ""};
                     } else {
                         return {false, "This card can't beat the attacking card"};
@@ -115,34 +115,34 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
                 return {false, ""}; // Never actually returned but let's make the compiler happy
             },
 
-            [&](TakeCommand c) -> Result {
-                if (state == DurakState::AttackerThinks) {
+            [&](TTakeCommand c) -> TResult {
+                if (State == EDurakState::AttackerThinks) {
                     return {false, "My brother in christ, you are attacking. You don't have to take cards."};
                 } else {
-                    std::string tableStr = Hand::toString(table);
-                    attackingCard = {};
-                    hand.append_range(table);
-                    freeFormBroadcast(active, "took the cards: " + tableStr);
-                    table.clear();
-                    fillHand(attackingActor);
-                    attackingActor = getDefendingActor(); // skip the turn
-                    attackingActor = getDefendingActor();
-                    state = DurakState::AttackerThinks;
+                    std::string tableStr = Hand::ToString(Table);
+                    AttackingCard = {};
+                    hand.append_range(Table);
+                    FreeFormBroadcast(active, "took the cards: " + tableStr);
+                    Table.clear();
+                    FillHand(AttackingActor);
+                    AttackingActor = GetDefendingActor(); // skip the turn
+                    AttackingActor = GetDefendingActor();
+                    State = EDurakState::AttackerThinks;
                     return {true, ""};
                 }
             },
 
-            [&](EndCommand c) -> Result {
-                if (state == DurakState::DefenderThinks) {
+            [&](TEndCommand c) -> TResult {
+                if (State == EDurakState::DefenderThinks) {
                     return {false, "My brother in christ, you are defending."};
                 } else {
-                    attackingCard = {};
-                    table.clear();
-                    freeFormBroadcast(active, "finished the attack");
-                    fillHand(getDefendingActor());
-                    fillHand(attackingActor);
-                    attackingActor = getDefendingActor();
-                    state = DurakState::AttackerThinks;
+                    AttackingCard = {};
+                    Table.clear();
+                    FreeFormBroadcast(active, "finished the attack");
+                    FillHand(GetDefendingActor());
+                    FillHand(AttackingActor);
+                    AttackingActor = GetDefendingActor();
+                    State = EDurakState::AttackerThinks;
                     return {true, ""};
                 }
             }},
@@ -150,42 +150,42 @@ Result DurakGame::executeGameCommand(unsigned playerNum, GameCommand cmd) {
     return res;
 }
 
-void DurakGame::fillHand(unsigned playerNum) {
-    auto& hand = hands[playerNum];
+void TDurakGame::FillHand(unsigned playerNum) {
+    auto& hand = Hands[playerNum];
     int missing = 6 - hand.size();
     if (missing <= 0) {
         return;
     }
-    int willTake = std::min<int>(missing, static_cast<int>(deck.size()));
+    int willTake = std::min<int>(missing, static_cast<int>(Deck.Size()));
     if (willTake == 0) {
         return;
     }
-    auto newCards = deck.deal(willTake);
+    auto newCards = Deck.Deal(willTake);
     hand.append_range(newCards);
-    actors[playerNum]->tookCards(newCards);
+    Actors[playerNum]->TookCards(newCards);
 }
 
-void DurakGame::checkWin(unsigned playerNum) {
-    if (hands[playerNum].size() == 0 && deck.size() == 0) {
-        isPlaying[playerNum] = false;
-        winRating.push_back(playerNum);
-        freeFormBroadcast(playerNum, "won! Took place: " + std::to_string(winRating.size()));
-        bFinished = true;
+void TDurakGame::CheckWin(unsigned playerNum) {
+    if (Hands[playerNum].size() == 0 && Deck.Size() == 0) {
+        IsPlaying[playerNum] = false;
+        WinRating.push_back(playerNum);
+        FreeFormBroadcast(playerNum, "won! Took place: " + std::to_string(WinRating.size()));
+        Finished = true;
     }
 }
 
-void DurakGame::freeFormBroadcast(int specialNum, const std::string& msg) {
+void TDurakGame::FreeFormBroadcast(int specialNum, const std::string& msg) {
     if (specialNum == -1) { // everyone gets the same message
-        for (int i = 0; i < actors.size(); i++) {
-            actors[i]->freeFormNotify(msg);
+        for (int i = 0; i < Actors.size(); i++) {
+            Actors[i]->FreeFormNotify(msg);
         }
     } else { // personalized message
-        for (int i = 0; i < actors.size(); i++) {
+        for (int i = 0; i < Actors.size(); i++) {
             if (i == specialNum) {
-                actors[i]->freeFormNotify("You " + msg);
+                Actors[i]->FreeFormNotify("You " + msg);
             }
             if (i != specialNum) {
-                actors[i]->freeFormNotify(actors[specialNum]->getName() + " " + msg);
+                Actors[i]->FreeFormNotify(Actors[specialNum]->GetName() + " " + msg);
             }
         }
     }

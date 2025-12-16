@@ -3,18 +3,18 @@
 #include "../durak/hand.h"
 #include "../player_manager.h"
 
-void Player::freeFormNotify(const std::string& msg) {
-    PlayerManager::sendToPlayer(id, msg);
+void TPlayer::FreeFormNotify(const std::string& msg) {
+    TPlayerManager::SendToPlayer(Id, msg);
 }
 
-void Player::canDefend(const Card& attackedBy) {
-    freeFormNotify("Attacked by: " + attackedBy.toString());
+void TPlayer::CanDefend(const TCard& attackedBy) {
+    FreeFormNotify("Attacked by: " + attackedBy.ToString());
 }
 
-void Player::canContinueAttack(const Card& wasBeatenBy) {
-    freeFormNotify("Opponent defended with " + wasBeatenBy.toString() + ". You may continue attacking.");
+void TPlayer::CanContinueAttack(const TCard& wasBeatenBy) {
+    FreeFormNotify("Opponent defended with " + wasBeatenBy.ToString() + ". You may continue attacking.");
 }
 
-void Player::tookCards(std::vector<Card> cards) {
-    freeFormNotify("Took cards: " + Hand::toString(cards));
+void TPlayer::TookCards(std::vector<TCard> cards) {
+    FreeFormNotify("Took cards: " + Hand::ToString(cards));
 }

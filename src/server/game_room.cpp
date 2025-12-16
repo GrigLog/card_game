@@ -6,19 +6,20 @@
 #include "common/common.h"
 #include "player_manager.h"
 
-GameRoom::GameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
-    : name(name)
-    , ownerId(ownerId)
-    , maxPlayers(maxPlayers) {
-    playerIdToActorNum[ownerId] = actors.size();
-    actors.emplace_back(new Player{ownerId, true});
+TGameRoom::TGameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
+    : Name(name)
+    , OwnerId(ownerId)
+    , MaxPlayers(maxPlayers) 
+{
+    PlayerIdToActorNum[ownerId] = Actors.size();
+    Actors.emplace_back(new TPlayer{ownerId, true});
 }
 
-std::vector<const GameRoom*> GameRoom::getAllRooms() {
-    std::vector<const GameRoom*> res;
-    for (auto it = GameRoom::allRooms.begin(); it != GameRoom::allRooms.end();) {
+std::vector<const TGameRoom*> TGameRoom::GetAllRooms() {
+    std::vector<const TGameRoom*> res;
+    for (auto it = TGameRoom::AllRooms.begin(); it != TGameRoom::AllRooms.end();) {
         if (it->second.expired()) {
-            it = GameRoom::allRooms.erase(it);
+            it = TGameRoom::AllRooms.erase(it);
         } else {
             res.push_back(it->second.lock().get());
             it++;
@@ -27,92 +28,92 @@ std::vector<const GameRoom*> GameRoom::getAllRooms() {
     return res;
 }
 
-bool GameRoom::addPlayer(unsigned playerId) {
+bool TGameRoom::AddPlayer(unsigned playerId) {
     // std::lock_guard<std::mutex> lock(playersMutex);
-    if (isFull()) {
+    if (IsFull()) {
         return false;
     }
-    playerIdToActorNum[playerId] = actors.size();
-    actors.emplace_back(new Player(playerId, false));
+    PlayerIdToActorNum[playerId] = Actors.size();
+    Actors.emplace_back(new TPlayer(playerId, false));
     return true;
 }
 
-bool GameRoom::addBot(std::unique_ptr<IBotStrategy>&& strategy) {
-    if (isFull()) {
+bool TGameRoom::AddBot(std::unique_ptr<IBotStrategy>&& strategy) {
+    if (IsFull()) {
         return false;
     }
-    actors.emplace_back(new Bot(std::move(strategy), nextBotId++));
+    Actors.emplace_back(new TBot(std::move(strategy), NextBotId++));
     return true;
 }
 
-bool GameRoom::isFull() const {
+bool TGameRoom::IsFull() const {
     // std::lock_guard<std::mutex> lock(playersMutex);
-    return actors.size() >= maxPlayers;
+    return Actors.size() >= MaxPlayers;
 }
 
-void GameRoom::notifyPlayerLeft(unsigned playerId) {
-    int num = playerIdToActorNum[playerId];
-    std::string name = actors[num]->getName();
-    for (const auto& [pid, num] : playerIdToActorNum) {
+void TGameRoom::NotifyPlayerLeft(unsigned playerId) {
+    int num = PlayerIdToActorNum[playerId];
+    std::string name = Actors[num]->GetName();
+    for (const auto& [pid, num] : PlayerIdToActorNum) {
         if (pid != playerId) { // writing to an invalidated socket causes segfault
-            PlayerManager::sendToPlayer(pid, name + " left.");
+            TPlayerManager::SendToPlayer(pid, name + " left.");
         }
     }
-    if (bStarted) {
-        gameOpt.value().notifyPlayerLeft(num);
+    if (Started) {
+        GameOpt.value().NotifyPlayerLeft(num);
     }
-    actors.erase(actors.begin() + num);
-    playerIdToActorNum.erase(playerId);
+    Actors.erase(Actors.begin() + num);
+    PlayerIdToActorNum.erase(playerId);
 }
 
-void GameRoom::start() {
-    bStarted = true;
-    gameOpt.emplace(actors);
-    for (int i = 0; i < actors.size(); i++) {
-        if (auto player = dynamic_cast<Player*>(actors[i].get())) {
-            playerIdToActorNum[player->id] = i;
+void TGameRoom::Start() {
+    Started = true;
+    GameOpt.emplace(Actors);
+    for (int i = 0; i < Actors.size(); i++) {
+        if (auto player = dynamic_cast<TPlayer*>(Actors[i].get())) {
+            PlayerIdToActorNum[player->Id] = i;
         }
     }
 }
 
-std::string GameRoom::handleCommand(unsigned playerId, SomeCommand cmd) {
-    if (std::holds_alternative<RoomCommand>(cmd)) {
-        return executeRoomCommand(playerId, std::get<RoomCommand>(std::move(cmd)));
+std::string TGameRoom::HandleCommand(unsigned playerId, TSomeCommand cmd) {
+    if (std::holds_alternative<TRoomCommand>(cmd)) {
+        return ExecuteRoomCommand(playerId, std::get<TRoomCommand>(std::move(cmd)));
     }
-    if (!bStarted) {
+    if (!Started) {
         return "error: This command only works in-game";
     }
-    auto result = gameOpt.value().executePlayerGameCommand(
-        playerIdToActorNum[playerId], std::get<GameCommand>(std::move(cmd)));
+    auto result = GameOpt.value().ExecutePlayerGameCommand(
+        PlayerIdToActorNum[playerId], std::get<TGameCommand>(std::move(cmd)));
     // broadcast successful actions
     return (result.first ? "ok. " : "error: ") + result.second;
 }
 
-std::string GameRoom::executeRoomCommand(unsigned playerId, RoomCommand cmd) {
+std::string TGameRoom::ExecuteRoomCommand(unsigned playerId, TRoomCommand cmd) {
     return std::visit(
-        VisitOverloadUtility{
-            [&](AddCommand c) -> std::string {
-                if (bStarted) {
+        TVisitOverloadUtility{
+            [&](TAddCommand c) -> std::string {
+                if (Started) {
                     return "error: The game has already started";
                 }
-                if (isFull()) {
+                if (IsFull()) {
                     return "error: No free player slots";
                 }
-                addBot(std::move(c.strategy));
+                AddBot(std::move(c.Strategy));
                 return "ok: bot added";
             },
 
-            [&](StartCommand c) -> std::string {
-                if (ownerId != playerId) {
+            [&](TStartCommand c) -> std::string {
+                if (OwnerId != playerId) {
                     return "error: You must be the owner to start the game";
                 }
-                if (bStarted) {
+                if (Started) {
                     return "error: The game has already started";
                 }
-                if (actors.size() < 2) {
+                if (Actors.size() < 2) {
                     return "error: Not enough players";
                 }
-                start();
+                Start();
                 return "ok.";
             }},
         std::move(cmd));
