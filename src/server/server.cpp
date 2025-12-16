@@ -6,7 +6,7 @@
 
 #include "game_server.h"
 
-volatile bool running{true}; 
+volatile bool running{true};
 
 void signalHandler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {

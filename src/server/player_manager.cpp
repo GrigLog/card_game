@@ -14,8 +14,7 @@
 TPlayerManager::TPlayerManager(int newPlayerPipeFd)
     : NewPlayerPipeFd(newPlayerPipeFd)
     , NextPlayerId(0)
-    , Running(true)
-{
+    , Running(true) {
     RunThread = std::thread(&TPlayerManager::run, this);
 }
 
@@ -107,7 +106,7 @@ void TPlayerManager::run() {
 }
 
 void TPlayerManager::SendToPlayer(uint32_t playerId,
-                                 const std::string& response) {
+                                  const std::string& response) {
     auto it = Players.find(playerId);
     if (it != Players.end()) {
         TMessage::WriteToSocket(it->second, response);
@@ -129,7 +128,7 @@ std::string TPlayerManager::HandleCommand(uint32_t playerId, TSomeCommand cmd) {
 // You might not believe, but I originally had several Command classes with
 // their own execute() methods, and it was LESS CONVENIENT
 std::string TPlayerManager::ExecuteLobbyCommand(unsigned playerId,
-                                               TLobbyCommand cmd) {
+                                                TLobbyCommand cmd) {
     auto it = PlayerRooms.find(playerId);
     bool hasRoom = it != PlayerRooms.end();
 
@@ -229,7 +228,7 @@ std::string TPlayerManager::ExecuteLobbyCommand(unsigned playerId,
 }
 
 void TPlayerManager::DestroyRoom(std::shared_ptr<TGameRoom> room,
-                                const std::string& msg) {
+                                 const std::string& msg) {
     for (const auto& actor : room->Actors) {
         if (auto player = dynamic_cast<TPlayer*>(actor.get())) {
             SendToPlayer(player->Id, msg);

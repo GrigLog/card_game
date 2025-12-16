@@ -5,8 +5,7 @@
 #include <chrono>
 
 TDeck::TDeck()
-    : Rng(std::chrono::steady_clock::now().time_since_epoch().count()) 
-{
+    : Rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
     Cards.reserve(36); // Стандартная колода для дурака
 
     // Создаем все карты от 6 до туза для каждой масти

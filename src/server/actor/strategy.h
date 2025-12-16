@@ -30,8 +30,8 @@ class TSortedStrategy: public IBotStrategy {
 public:
     float Coeff;
     TSortedStrategy(float coeff)
-        : Coeff(coeff) 
-    {}
+        : Coeff(coeff) {
+    }
 
 protected:
     int SelectFromAvailable(const std::vector<TCard>& hand, ESuit trump) override;

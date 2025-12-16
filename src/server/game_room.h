@@ -43,12 +43,12 @@ public:
     }
 
     static std::shared_ptr<TGameRoom> make(const std::string& name,
-                                          uint32_t ownerId, size_t maxPlayers) {
+                                           uint32_t ownerId, size_t maxPlayers) {
         auto res = std::make_shared<TGameRoom>(name, ownerId, maxPlayers);
         AllRooms[name] = std::weak_ptr(res);
         return res;
     }
-    
+
     static std::vector<const TGameRoom*> GetAllRooms();
 
     bool AddPlayer(unsigned playerId);

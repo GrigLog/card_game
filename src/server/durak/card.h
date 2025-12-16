@@ -31,8 +31,8 @@ public:
 public:
     TCard(ESuit suit, ERank rank)
         : suit(suit)
-        , rank(rank) 
-    {}
+        , rank(rank) {
+    }
 
     bool operator==(const TCard& other) const {
         return suit == other.suit && rank == other.rank;

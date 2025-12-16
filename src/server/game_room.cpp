@@ -9,8 +9,7 @@
 TGameRoom::TGameRoom(const std::string& name, uint32_t ownerId, size_t maxPlayers)
     : Name(name)
     , OwnerId(ownerId)
-    , MaxPlayers(maxPlayers) 
-{
+    , MaxPlayers(maxPlayers) {
     PlayerIdToActorNum[ownerId] = Actors.size();
     Actors.emplace_back(new TPlayer{ownerId, true});
 }

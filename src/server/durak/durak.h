@@ -34,11 +34,10 @@ public:
 
 public:
     TDurakGame(const std::vector<std::unique_ptr<IActor>>& actors)
-        : Actors(actors) 
+        : Actors(actors)
         , Finished(false)
         , State(EDurakState::AttackerThinks)
-        , AttackingActor(0)
-    {
+        , AttackingActor(0) {
         auto trumpCard = Deck.GetBottom();
         Trump = trumpCard.suit;
         FreeFormBroadcast(-1, "Trump card (at the deck bottom): " + trumpCard.ToString());

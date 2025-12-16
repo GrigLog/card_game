@@ -11,8 +11,7 @@
 
 TGameServer::TGameServer()
     : AcceptHandler(NewPlayerPipe.getWriteFd())
-    , PlayerManager(NewPlayerPipe.getReadFd())
-{
+    , PlayerManager(NewPlayerPipe.getReadFd()) {
     std::cout << "Game server started. Type anything to stop it." << std::endl;
     std::string input;
     std::cin >> input;

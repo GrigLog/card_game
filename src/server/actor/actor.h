@@ -37,8 +37,8 @@ struct TBot: IActor {
 
     TBot(std::unique_ptr<IBotStrategy> strategy, unsigned roomId)
         : Strategy(std::move(strategy))
-        , RoomId(roomId) 
-    {}
+        , RoomId(roomId) {
+    }
 
     bool IsPlayer() {
         return false;
@@ -56,8 +56,9 @@ struct TPlayer: IActor {
 
     TPlayer(unsigned id, bool bOwner /*, FCallback&& cb*/)
         : Id(id)
-        , Owner(bOwner) /*, notifyCallback(cb)*/ 
-    {}
+        , Owner(bOwner) /*, notifyCallback(cb)*/
+    {
+    }
 
     bool IsPlayer() override {
         return true;
